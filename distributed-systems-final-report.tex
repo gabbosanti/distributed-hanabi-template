@@ -34,6 +34,36 @@ Hanabi is a cooperative multiplayer card game for 2-5 players where players scor
 
 \section{Concept}\label{concept}
 
+Here you should explain:
+
+\begin{itemize}
+  
+  \item Use case description:
+  \begin{itemize}
+    \item \emph{what} is the software doing?
+    \item \emph{where} are the users?
+    \item \emph{when} and \emph{how frequently} do they interact with the system?
+    \item \emph{how} do they \emph{interact} with the system? which \emph{devices} are they using?
+  
+    \item does the system need to \emph{store} user's \textbf{data}? 
+    \emph{which}? \emph{where}?
+    \item most likely, there will be \emph{multiple} \textbf{roles}
+    
+  \end{itemize}
+
+\subsection{Context}
+The software implements the game Hanabi, a 3-5 player cooperative board game, where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards. Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white). Information for your own cards must only be acquired through the strict communication methods the action systems permits. A successful game ends with 5 different colored decks in increasing order. 
+The users can run the program from different machines on the same network. 
+Each turn, one user does one of the allowed actions, then the updated game state is shared to all the users. 
+Each player can:
+    \begin{itemize}
+        \item \emph{Give a hint} to another player and spend one of 8 hint tokens in total. The hint can give information about either the color or the number of a subset of the other player's cards. 
+        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card turns out to be in the wrong color, or lesser or equal to the topmost of that color deck, the move is considered unsuccessful and one of 3 life tokens is spent. Then he draws a card in the place of the played one. 
+        \item \emph{Discard} one card from his hand and return one of the already spent tokens to the pool. The player must end each turn with the same amount of cards and so a new card is drawn. 
+    \end{itemize}
+    The system needs to store basic player information - at least an unique ID, in order to conduct orderly match creation and orchestration. In addition, additional information about the player's previous success in game can provide an ordering system for better matchmaking. Afterwards, the system is expanded to store previous games per game ID so that they can be restarted. 
+
+\subsection{Use Case description}
 The aim of this project is to design and implement a distributed version of the game Hanabi.
 It consist on a web-based application, where players can connect to a server and play togheter directly from their browsers.
 A group between 2 and 5 players from distinct machines can play togheter and form a team, by starting the client and connecting to the central server.
@@ -44,9 +74,12 @@ Why is distribution needed?
   %
   \begin{itemize}
     \item geographically distributed environments?
+    The players communicate through an unreliable, potentially lossy network. 
     \item computation speedup?
     \item resource sharing?
+    The game state is the resource shared. Each player gets write privilege on his turn, so concurrent writes do not pose a problem. 
     \item fault tolerance?
+    In order to mask faults from the players, the server process is replicated and by consensus mechanism the master is determined. This offers a level of fault tolerance at most the number of slaves that can successfully be promoted to master in case of failure. 
     \item other reasons?
   \end{itemize}
 
@@ -97,58 +130,69 @@ Motivate which distributed system features are relevant for your project, and wh
   \begin{itemize}
     \item does your system need to hide distribution details from users or developers?
     \item is it important that failures, location, or replication are invisible?
+    
+    \item Transparency of replication/failure - hidden copies of the master may seamlessly take over in case of a failure. 
   \end{itemize}
 
   \item fault tolerance, dependability -- availability, reliability, integrity, maintainability, safety
   \begin{itemize}
     \item what happens if a component fails? is uninterrupted service required?
     \item is data loss or corruption unacceptable?
+    Data loss/corruption is prevented on the transport level. 
     \item how quickly must the system recover from faults?
+    The system needs to recover from fault in a time that ensures an acceptable level of availability to the users. 
   \end{itemize}
 
   \item scalability
   \begin{itemize}
     \item will the system need to handle increasing numbers of users, requests, or data?
+    Yes. Multiple instances of game servers can get deployed and work in parallel. The scope for scalability is limited and so a simpler but less expandable deployment method will be used. The number of nodes that balance the demand on the system by creating and destroying server instances should grow proportionally to the total number of players, up to the level possible by the system's resources (memory,CPU).
     \item is it expected to grow over time?
+    
   \end{itemize}
 
   \item security, trust
   \begin{itemize}
     \item is sensitive data being processed or stored?
+    It is possible to expand the system to allow for user authentication and for the need to arise for safely storing passwords. 
     \item are there multiple user roles with different permissions?
     \item is authentication or authorization required?
+    Authentication is required so that the system can conclude the user is precisely the one identified by the ID. 
   \end{itemize}
 
   \item resource sharing
   \begin{itemize}
     \item do multiple users or components need access to shared resources?
     \item is coordination or synchronization needed?
+    Synchronization is done by broadcasting the shared game state at each game turn. Game state is persistent so that a game can be restarted synchronously after any issues arise. The events of the game have a natural total ordering so event order can always be reconstructed. 
   \end{itemize}
 
-  \item openness, interoperability, heterogeneity of components
-  \begin{itemize}
-    \item Will your system interact with external systems or use components built with different technologies?
-    \item Is standardization or compatibility important?
-  \end{itemize}
+  % \item openness, interoperability, heterogeneity of components
+  % \begin{itemize}
+  %   \item Will your system interact with external systems or use components built with different technologies?
+  %   \item Is standardization or compatibility important?
+  % \end{itemize}
 
-  \item evolvability, maintainability
-  \begin{itemize}
-    \item Will the system need to be updated or extended after deployment?
-    \item Is long-term maintenance a concern?
-  \end{itemize}
+  % \item evolvability, maintainability
+  % \begin{itemize}
+  %   \item Will the system need to be updated or extended after deployment?
+  %   \item Is long-term maintenance a concern?
+  % \end{itemize}
 
   \item performance, concurrency, computation / communication efficiency, bandwidth
   \begin{itemize}
     \item Are there strict requirements on response time or throughput?
     \item Will many operations happen in parallel?
+    The system will execute the called procedures on the different games concurrently. 
     \item Is network usage a concern?
+    As the game state can be sent in reasonably sized JSON format messages, network issues are not expected to arise until extreme loads on the system. 
   \end{itemize}
 
-  \item economy, costs  
-  \begin{itemize}
-    \item Are there budget constraints for development, deployment, or operation?
-    \item Is minimizing resource usage important?
-  \end{itemize}
+%   \item economy, costs  
+%   \begin{itemize}
+%     \item Are there budget constraints for development, deployment, or operation?
+%     \item Is minimizing resource usage important?
+%   \end{itemize}
 \end{itemize}
 
 \section{Design}\label{design}
@@ -171,7 +215,9 @@ in \cref{requirements} and \cref{ds-features}.
   \item Which architectural style?
   %
   \begin{itemize}
-    \item why?
+    \item \emph{Client-server architecture}. In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. After each update, executed as a remote procedure call upon the GameState object, the new state is broadcasted to all the players. This enables for a separation between the application logic in the GameState object and the communicational logic in the Server object. \footnote{According to the popular board gaming website boardgamearena \cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.} 
+    \item \emph{Request-Response Remote Procedure Calling} upon the remote object GameState. The server unmarshalls the client's request, calls a remote procedure with the relevant sent parameters and marshalls a response in the corresponding JSON format. The client is unaware that the the game is executed on another device (transparency of location). 
+    % add more here 
   \end{itemize}
 \end{itemize}
 
@@ -182,8 +228,7 @@ in \cref{requirements} and \cref{ds-features}.
   %
   \begin{itemize}
     \item e.g.~\emph{clients}, \emph{servers}, \emph{load balancers},
-    \emph{caches}, \emph{databases}, \emph{message brokers},
-    \emph{queues}, \emph{workers}, \emph{proxies}, \emph{firewalls},
+    \emph{caches}, \emph{databases}, \emph{proxies}, \emph{firewalls},
     \emph{CDNs}, \emph{etc.}
   \end{itemize}
 
@@ -207,9 +252,14 @@ in \cref{requirements} and \cref{ds-features}.
 \begin{quote}
 Component diagrams are welcome here
 \end{quote}
-
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{почеток-архитектура.png}
+    \caption{Caption}
+    \label{fig:placeholder}
+\end{figure}
 \subsection{Modelling}\label{modelling}
-
+% add objects and methods here 
 \begin{itemize}
   \item which \textbf{domain entities} are there?
   %
@@ -253,7 +303,8 @@ Class diagram are welcome here
   \item how do components \emph{communicate}? \emph{when}? \emph{what}?
   \item \emph{which} \textbf{interaction patterns} do they enact?
 \end{itemize}
-
+%R-R as mentioned before? maybe put that here 
+%sequence diagram on that 
 \begin{quote}
 Sequence diagrams are welcome here
 \end{quote}
@@ -277,13 +328,14 @@ State diagrams are welcome here
 
 \begin{itemize}
   \item Is there any data that needs to be stored?
-  %
+  % need to add persistent database of player ids to code for matchmaking
   \begin{itemize}
     \item \emph{what} data? \emph{where}? \emph{why}?
   \end{itemize}
   
   \item how should \emph{persistent data} be \textbf{stored}?
-  %
+  Hash table sey-value store for O(1) insertions and reads, if ranked matchmaking needed (range queries) it can be b+ tree based. 
+  % KV store ig player id to player info. 
   \begin{itemize}
     \item e.g.~relations, documents, key-value, graph, etc.
     \item why?
@@ -291,13 +343,16 @@ State diagrams are welcome here
   
   \item Which components perform queries on the database?
   %
+  The matchmaker that spawns matches. 
   \begin{itemize}
     \item \emph{when}? \emph{which} queries? \emph{why}?
+    Query for a number of players to create a lobby, if enough are online currently. 
     \item concurrent read? concurrent write? why?
+    hmm ? ex writes online state for player when reading online players problem 
   \end{itemize}
   
   \item Is there any data that needs to be shared between components?
-  %
+  % not really 
   \begin{itemize}
     \item \emph{why}? \emph{what} data?
   \end{itemize}
@@ -307,13 +362,15 @@ State diagrams are welcome here
 
 \begin{itemize}
   \item Is there any form of data \textbf{replication} / federation / sharing?
-  %
+  % data repl i think not. 
+  
   \begin{itemize}
     \item \emph{why}? \emph{how} does it work?
   \end{itemize}
   
   \item Is there any \textbf{heart-beating}, \textbf{timeout}, \textbf{retry mechanism}?
-  %
+  % we might need to implement 
+  % currently client polls constantly. We can impl heartbeat so that server ends the game if client on turn not responding. 
   \begin{itemize}
     \item \emph{why}? \emph{among} which components? \emph{how} does it work?
   \end{itemize}
@@ -323,13 +380,15 @@ State diagrams are welcome here
   \begin{itemize}
     \item \emph{what} happens when a component fails? \emph{why}? \emph{how}?
   \end{itemize}
+  When redis master server fails, a replica is promoted if consensus exists. If the master rejoins again, he is informed that he is demoted to a replica. 
 \end{itemize}
 
 \subsection{Availability}\label{availability}
-
+Availability is permitted by a level of fault tolerance. 
+%write more here 
 \begin{itemize}
   \item Is there any \textbf{caching} mechanism?
-  %
+    The client process saves a local copy of the last received state. When issues arise this copy can serve as a fallback so that availability is prioritized over consistency. 
   \begin{itemize}
     \item \emph{where}? \emph{why}?
   \end{itemize}
@@ -341,7 +400,7 @@ State diagrams are welcome here
   \end{itemize}
 
   \item In case of \textbf{network partitioning}, how does the system behave?
-  %
+  % rn i have them all on static ips. we need to think about this i think profesor would like. 
   \begin{itemize}
     \item \emph{why}? \emph{how}?
   \end{itemize}
@@ -351,20 +410,20 @@ State diagrams are welcome here
 
 \begin{itemize}
   \item Is there any form of \textbf{authentication}?
-  %
+  % We can add this. Probably easy to do. Players must authenticate with password, maybe use schema from exercises profesor. validation in server 
   \begin{itemize}
     \item \emph{where}? \emph{why}?
   \end{itemize}
 
   \item Is there any form of \textbf{authorization}?
-  %
+  % i dont think so 
   \begin{itemize}
     \item which sort of \emph{access control}?
     \item which sorts of users / \emph{roles}? which \emph{access rights}?
   \end{itemize}
 
   \item Are \textbf{cryptographic schemas} being used?
-  %
+  % we could add this if in mood but idk if worth the effort 
   \begin{itemize}
     \item e.g.~token verification,
     \item e.g.~data encryption, etc.
@@ -375,43 +434,32 @@ State diagrams are welcome here
 
 Please report here all the implementation (technology-dependent) choices you made while implementing your design.
 
-\begin{quote}
-  If you run out of time for this project, you may consider leaving some aspect unimplemented, 
-  and simply discuss how you would have implemented them.
-  %
-  In this case, better would be to discuss unimplemented features in \cref{future-works}.
-\end{quote}
 
 \begin{itemize}
   \item which \textbf{network protocols} to use?
   %
   \begin{itemize}
-    \item e.g.~UDP, TCP, HTTP, WebSockets, gRPC, XMPP, AMQP, MQTT, etc.
+    \item TCP,WebSockets,
   \end{itemize}
   
   \item how should \emph{in-transit data} be \textbf{represented}?
   %
   \begin{itemize}
-    \item e.g.~JSON, XML, YAML, Protocol Buffers, etc.
+    \item JSON dictionary
   \end{itemize}
   
   \item how should \emph{databases} be \textbf{queried}?
   %
   \begin{itemize}
-    \item e.g.~SQL, NoSQL, etc.
+    \item Queries by key. 
   \end{itemize}
   
   \item how should components be \emph{authenticated}?
   %
   \begin{itemize}
-    \item e.g.~OAuth, JWT, etc.
+    \item OAuth perhaps
   \end{itemize}
 
-  \item how should components be \emph{authorized}?
-  %
-  \begin{itemize}
-    \item e.g.~RBAC, ABAC, etc.
-  \end{itemize}
 \end{itemize}
 
 \subsection{Technological details}\label{technological-details}
@@ -421,14 +469,15 @@ Please report here all the implementation (technology-dependent) choices you mad
 \end{itemize}
 
 \section{Validation}\label{validation}
-
+The application logic was tested out separately from the communication protocol implemented. End-to-end testing was done to ensure the complete system meets the specification. 
 \subsection{Automatic Testing}\label{automatic-testing}
 
 \begin{itemize}
   \item how were individual components \textbf{\emph{unit}-test}ed?
-  
+  The client and server nodes were tested in regards to all possible communication possibilities - connect, send, receive, timeout. The GameState object was unit tested in regards to the functioning of all the RPC's that can be called upon the object. 
   \item how was communication, interaction, and/or integration among components tested?
-  
+  Unit tests were done for the matchmaker to see if it properly instantiates and destroys matches. 
+  Multiple server instances working concurrently were spawned to test out the system in a simulated production environment. 
   \item how to \textbf{\emph{end-to-end}-test} the system?
   %
   \begin{itemize}
@@ -436,7 +485,7 @@ Please report here all the implementation (technology-dependent) choices you mad
   \end{itemize}
 
   \item for each test specify:
-  %
+  % dont know if going into this much detail makes sense at the moment 
   \begin{itemize}
     \item rationale of individual tests
     \item how were the test automated
@@ -447,6 +496,7 @@ Please report here all the implementation (technology-dependent) choices you mad
 
 \begin{quote}
 recall that \emph{deployment} \textbf{automation} is commonly used to \emph{test} the system in \emph{production-like} environment
+% we can try automated deployment if aynone knows how to do it 
 \end{quote}
 
 \begin{quote}
@@ -460,7 +510,7 @@ recall to test corner cases (crashes, errors, etc.)
   %
   \begin{itemize}
     \item what did you test?
-    \item why wasn't it automatic?
+    \item why wasn't it automatic? To check response times of server in real time under different real loads on the system. 
   \end{itemize}
 \end{itemize}
 
@@ -469,6 +519,10 @@ recall to test corner cases (crashes, errors, etc.)
 \begin{itemize}
   \item should one install your software from scratch, how to do it?
   %
+  Docker and docker compose need to be installed. 
+  Requirements.txt file stores the python dependencies that can simply be installed with the command pip install -r command. The .yml file spawns a server instance with multiple replicas and a sentinel instance that does failover.
+  docker compose up --build 
+  command instantiates the containers as specified in the yml file. 
   \begin{itemize}
     \item provide instructions
     \item provide expected outcomes
@@ -477,7 +531,7 @@ recall to test corner cases (crashes, errors, etc.)
   \item what software should be installed on the machines to run your project? which versions?
   
   \item should one set environment variables or configuration files?
-  
+  Configuration files for the redis master, replica and sentinel are already set up in each game instance so that failover works as intended. 
   \item if you're using containerization (e.g.~Docker), 
   describe how you engineered your deployment scrips (e.g. \texttt{docker-compose.yml} files)
 \end{itemize}
@@ -489,8 +543,11 @@ recall to test corner cases (crashes, errors, etc.)
   %
   \begin{itemize}
     \item provide instructions
+    docker compose up --build
+    python client.py in separate terminals for any number of clients 
     \item provide expected outcomes
-    \item provide screenshots if possible
+    spawn a server with the replicas. 
+    \item provide screenshots if possible - have some old ones can make new 
   \end{itemize}
 \end{itemize}
 
