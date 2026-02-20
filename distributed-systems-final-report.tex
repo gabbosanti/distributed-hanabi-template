@@ -9,7 +9,7 @@
 \newcommand{\emailaddr}[1]{\href{mailto:#1}{\texttt{#1}}}
 
 \title{\LARGE
-    Final Report : Distributed Hanabi
+    Distributed Hanabi
 }
 
 \subtitle{Final Report for the Distributed Systems Course 2025-2026}
@@ -34,8 +34,7 @@ Hanabi is a cooperative multiplayer card game for 2-5 players where players scor
 
 \section{Concept}\label{concept}
 
-Here you should explain:
-
+{\scriptsize Here you should explain:
   \begin{itemize}
     \item \emph{what} is the software doing?
     \item \emph{where} are the users?
@@ -46,8 +45,8 @@ Here you should explain:
     \emph{which}? \emph{where}?
     \item most likely, there will be \emph{multiple} \textbf{roles}
     
-  \end{itemize}
-
+  \end{itemize} 
+}
 \subsection{Context}
 The software implements the game Hanabi, a 3-5 player cooperative board game, where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards. Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white). Information for your own cards must only be acquired through the strict communication methods the action systems permits. A successful game ends with 5 different colored decks in increasing order. 
 The users can run the program from different machines on the same network. 
@@ -67,21 +66,41 @@ A group between 2 and 5 players from distinct machines can play togheter and for
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
 Playes visualize the game shared state on their clients and, on each turn, send command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
 
-Why is distribution needed?
+\subsection{Reasons for distribution}
+
+{\scriptsize Why is distribution needed?
   %
   \begin{itemize}
     \item geographically distributed environments?
-    The players communicate through an unreliable, potentially lossy network. 
     \item computation speedup?
     \item resource sharing?
-    The game state is the resource shared. Each player gets write privilege on his turn, so concurrent writes do not pose a problem. 
     \item fault tolerance?
-    In order to mask faults from the players, the server process is replicated and by consensus mechanism the master is determined. This offers a level of fault tolerance at most the number of slaves that can successfully be promoted to master in case of failure. 
     \item other reasons?
   \end{itemize}
+}
 
+The distributed nature of the system is inherent to the problem domain. The game is designed to be played by multiple users connecting from different machines, potentially located in geographically separated environments. Therefore, a centralized single-machine solution would not satisfy the project requirements.
+
+From a systems perspective, distribution is required for several reasons:
+
+\begin{itemize}
+
+    \item \textbf{Geographically distributed environment:} 
+    Players connect from different devices over a network that may be unreliable, lossy, or subject to delays. The system must therefore tolerate message latency, disconnections, and partial failures.
+
+    \item \textbf{Resource sharing:} 
+    The game state represents a shared resource accessed by multiple participants. Although gameplay is turn-based, the system must guarantee consistency of the replicated state and ensure that all clients observe the same authoritative version of the game.
+
+    \item \textbf{Fault tolerance:} 
+    To avoid interrupting active game sessions, the server component can be replicated. Through a consensus mechanism, a leader (master) node is elected to manage state transitions. In case of failure, another replica can be promoted, allowing the system to continue operating without losing persistent state.
+
+    \item \textbf{Coordination and consistency:} 
+    Even though only one player performs an action per turn, the distributed environment introduces challenges such as message ordering, duplicated requests, and possible race conditions during failures. The system must therefore enforce a well-defined consistency model.
+
+\end{itemize}
 \section{Requirements Elicitation and Analysis}\label{requirements}
 
+{\scriptsize
 \begin{itemize}
   \item The requirements must explain \textbf{what} (not how) the software
   being produced should do.
@@ -116,7 +135,7 @@ Why is distribution needed?
     \item these will be important for the validation phase
   \end{itemize}
 \end{itemize}
-
+}
 \subsection{Relevant Distributed System Features}
 \label{ds-features}
 
