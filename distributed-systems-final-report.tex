@@ -48,7 +48,7 @@ Hanabi is a cooperative multiplayer card game for 2-5 players where players scor
   \end{itemize} 
 }
 \subsection{Context}
-The software implements the game Hanabi, a 3-5 player cooperative board game, where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards. Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white). Information for your own cards must only be acquired through the strict communication methods the action systems permits. A successful game ends with 5 different colored decks in increasing order. 
+The software implements the game Hanabi, a 2-5 player cooperative board game, where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards. Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white). Information for your own cards must only be acquired through the strict communication methods the action systems permits. A successful game ends with 5 different colored decks in increasing order. 
 The users can run the program from different machines on the same network. 
 Each turn, one user does one of the allowed actions, then the updated game state is shared to all the users. 
 Each player can:
@@ -101,41 +101,78 @@ From a systems perspective, distribution is required for several reasons:
 \section{Requirements Elicitation and Analysis}\label{requirements}
 
 {\scriptsize
-\begin{itemize}
-  \item The requirements must explain \textbf{what} (not how) the software
-  being produced should do.
-  %
   \begin{itemize}
-    \item you should not focus on the particular problems, but exclusively on
+    \item The requirements must explain \textbf{what} (not how) the software
+    being produced should do. You should not focus on the particular problems, but exclusively on
     what you want the application to do.
+    
+    \item Requirements must be clearly identified, and possibly numbered
+    
+    \item Requirements are divided into:
   \end{itemize}
 
-  \item Requirements must be clearly identified, and possibly numbered
-
-  \item Requirements are divided into:
-  %
+%
   \begin{itemize}
     \item \textbf{Functional}: some functionality the software should provide to the user
-
     \item \textbf{Non-functional}: requirements that do not directly concern behavioural aspects, such as consistency, availability, etc.
-    \item \textbf{Implementation}: constrain the entire phase of system realization, 
-    for instance by requiring the use of a specific programming language and/or a specific software tool
+    \item \textbf{Implementation}: constrain the entire phase of system realization, for instance by requiring the use of a specific programming language and/or a specific software tool
     %
     \begin{itemize}
       \item these constraints should be adequately justified by political / economic / administrative reasons\ldots{}
       \item \ldots{} otherwise, implementation choices should emerge \emph{as  a consequence of} design
     \end{itemize}
+    
+    \item If there are domain-specific terms, these should be explained in a glossary
+    
+    \item Each requirement must have its own \textbf{acceptance criterion}
+  
   \end{itemize}
 
-  \item If there are domain-specific terms, these should be explained in a glossary
-  
-  \item Each requirement must have its own \textbf{acceptance criterion}
   %
   \begin{itemize}
     \item these will be important for the validation phase
   \end{itemize}
-\end{itemize}
+
 }
+
+Requirements are elicited from the problem domain and the intended use of the system.
+They are categorized into functional, non-functional, and implementation requirements.
+
+\subsubsection{Functional Requirements}
+
+\begin{itemize}
+
+  \item \textbf{FR1 - Game session creation :} \newline
+  The system shall allow a user to create a new game session. \newline
+  \emph{Acceptance criterion :} A user can create a session and receives a unique game ID.
+  \item \textbf{FR2 - Join existing session :} \newline
+  The system shall allow users to join an existing game session using a valid game ID. \newline
+  \emph{Acceptance criterion: } Up to 5 players can successfully join the same session and are notified of other participants.
+  \item \textbf{FR3 - Command validation :} \newline
+  The system shall validate every player command according to the game rules before applying state changes. \newline
+  \emph{Acceptance criterion: } If a player submits an invalid move, the system rejects it and the global state remains unchanged.
+  \item \textbf{FR4 - State Broadcast :} \newline
+  The system shall propagate every valid state update to all connected clients. \newline
+  \emph{Acceptance criterion: } If a player submits a valid move, it is propagated through the system and the global state is changed.
+
+\end{itemize}
+
+\subsubsection{Non-Functional Requirements}
+
+\begin{itemize}
+
+  \item \textbf{NFR1 :} The system shall allow players to connect and play togheter.
+
+\end{itemize}
+
+\subsubsection{Implementation Requirements}
+
+\begin{itemize}
+
+  \item \textbf{IR1 :} The system shall allow players to connect and play togheter.
+
+\end{itemize}
+
 \subsection{Relevant Distributed System Features}
 \label{ds-features}
 
