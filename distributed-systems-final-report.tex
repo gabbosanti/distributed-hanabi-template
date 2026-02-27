@@ -34,6 +34,8 @@ Hanabi is a cooperative multiplayer card game for 2-5 players where players scor
 
 \section{Concept}\label{concept}
 
+The following design is based on established distributed systems principles as described in the literature \cite{distributed-systems-book}.
+
 {\scriptsize Here you should explain:
   \begin{itemize}
     \item \emph{what} is the software doing?
@@ -250,6 +252,7 @@ Motivate which distributed system features are relevant for your project, and wh
 
 \section{Design}\label{design}
 
+{\scriptsize
 This chapter explains the strategies used to meet the requirements identified in the analysis. 
 %
 Ideally, the design should be the same, regardless of the technological choices made during the implementation phase.
@@ -258,31 +261,29 @@ Ideally, the design should be the same, regardless of the technological choices 
 You can re-arrange the sections as you prefer, but all the sections must be present in the end
 \end{quote}
 
-\noindent
 \textbf{Important:} try to motivate your design choices in relation to the requirements and features identified 
 in \cref{requirements} and \cref{ds-features}.
 
+}
+
 \subsection{Architecture}\label{architecture}
 
-\begin{itemize}
-  \item Which architectural style?
-  %
-  \begin{itemize}
-    \item \emph{Client-server architecture}. In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. After each update, executed as a remote procedure call upon the GameState object, the new state is broadcasted to all the players. This enables for a separation between the application logic in the GameState object and the communicational logic in the Server object. \footnote{According to the popular board gaming website boardgamearena \cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.} 
-    \item \emph{Request-Response Remote Procedure Calling} upon the remote object GameState. The server unmarshalls the client's request, calls a remote procedure with the relevant sent parameters and marshalls a response in the corresponding JSON format. The client is unaware that the the game is executed on another device (transparency of location). 
-    % add more here 
-  \end{itemize}
-\end{itemize}
+The system is based on a client-server architecture.
+In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state.
+After each update, the new state is broadcasted to all the players.
 
 \subsection{Infrastructure}\label{infrastructure}
+The system is composed of these architectural components.
 
 \begin{itemize}
   \item are there \emph{infrastructural components} that need to be introduced? \emph{how many}?
   %
   \begin{itemize}
-    \item e.g.~\emph{clients}, \emph{servers}, \emph{load balancers},
-    \emph{caches}, \emph{databases}, \emph{proxies}, \emph{firewalls},
-    \emph{CDNs}, \emph{etc.}
+    \item \textbf{Client :}
+    \item \textbf{Server :}
+    \item \textbf{Load Balancer :}
+    \item \textbf{Redis Master :}
+    \item \textbf{Redis Replica :}
   \end{itemize}
 
   \item how do components \emph{distribute} over the network? \emph{where}?
@@ -307,8 +308,8 @@ Component diagrams are welcome here
 \end{quote}
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/почеток-архитектура.png}
-    \caption{Caption}
+    \includegraphics[width=1.0\linewidth]{figures/hanabi-architecture.png}
+    \caption{Overall architecture of the system}
     \label{fig:placeholder}
 \end{figure}
 \subsection{Modelling}\label{modelling}
@@ -620,7 +621,13 @@ Discuss possible future works, improvements, extensions, optimizations, etc.
 
 Also discuss here any unimplemented feature, and how you would have implemented it.
 
-\bibliographystyle{plain}
-\bibliography{references}
+\begin{thebibliography}{99}
+
+\bibitem{distributed-systems-book}
+Tanenbaum, A. S., \& Van Steen, M. (2017).
+\textit{Distributed systems: Principles and paradigms} (3rd ed.).
+Pearson Education.
+
+\end{thebibliography}
 
 \end{document}
