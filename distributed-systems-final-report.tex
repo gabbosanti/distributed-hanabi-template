@@ -124,44 +124,66 @@ This section defines the requirements for transforming the Hanabi implementation
 
 %
 \begin{itemize}
-  \item \textbf{FR-01 — Lobby and Session Management} The system shall allow multiple users to connect, enter a lobby, and start a game session once the configured player threshold is reached.
+  \item \textbf{1. Lobby and Session Management} The system shall allow multiple users to connect, enter a lobby, and start a game session once the configured player threshold is reached.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Users can connect to the server, see a lobby with waiting players, and start a game when enough players have joined.
   \end{itemize}
 
-  \item \textbf{FR-02 — Game State Management} The system shall maintain a consistent game state across all clients, ensuring that all players see the same game state after each action.
-  \begin{itemize}
-    \item \textbf{Acceptance Criterion:} After a player takes an action, all clients receive the updated game state, and it reflects the action taken.
-  \end{itemize}
-
-  \item \textbf{FR-03 — Player Actions} The system shall allow players to perform valid game actions (e.g., give hints, play cards, discard cards) and update the game state accordingly.
+  \item \textbf{2. Player Actions} The system shall allow players to perform valid game actions (e.g., give hints, play cards, discard cards) and update the game state accordingly.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Players can perform actions based on the game rules and their teammates' cards, and the game state updates correctly based on those actions
   \end{itemize}
 
-  \item \textbf{FR-04 — Persistent Game State} The system shall persist the game state to allow recovery in case of server failure.
-  \begin{itemize}
-    \item \textbf{Acceptance Criterion:} If the main server fails, the backup server can take over and restore the game state, allowing players to continue without losing progress.
-  \end{itemize}
-
-  \item \textbf{FR-05 — Player Identification} The system shall assign a unique identifier to each player to manage game sessions and actions.
+  \item \textbf{3. Player Identification} The system shall assign a unique identifier to each player to manage game sessions and actions.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Each player receives a unique ID upon connecting, and the system uses this ID to track their actions and game state.
   \end{itemize}
 
-  \item \textbf{FR-06 — Game Conclusion} The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
+  \item \textbf{4. Game Conclusion} The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} When the game ends (e.g., there are no cards left, or the number of misfires exceeds 3), all clients receive a notification with the final game state and the outcome (win/loss).    
   \end{itemize}
 
-  \item \textbf{FR-07 — Player Disconnection Handling} The system shall handle player disconnections gracefully, allowing the game to continue if possible.
+  \item \textbf{5. Player Disconnection Handling} The system shall handle player disconnections gracefully, allowing the game to continue if possible.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} If a player disconnects, the system allows the remaining players to continue the game, and the disconnected player can reconnect within a reasonable time frame without losing their progress.
   \end{itemize}
 
-  \item \textbf{FR-08 — Security} The system shall implement basic security measures to protect player data and prevent unauthorized access.
+  \item \textbf{6. Security} The system shall implement basic security measures to protect player data and prevent unauthorized access.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Player data is stored securely, and the system prevents unauthorized access to game sessions and player information through authentication.
+  \end{itemize}
+
+  \item \textbf{7. User Interface} The system shall provide a user-friendly interface for players to interact with the game.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} Players can easily understand how to perform actions and view the game state through the interface, with clear visual cues for game elements and actions.
+  \end{itemize}
+
+\end{itemize}
+
+\subsection{Non-Functional Requirements}
+\label{non-functional-requirements}
+
+%
+\begin{itemize}
+  \item \textbf{1. Performance} The system shall respond to player actions and update the game state within an acceptable time frame to ensure a smooth gaming experience.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} The system processes player actions and updates the game state within 500ms, ensuring that players experience minimal lag during gameplay.
+  \end{itemize}
+
+  \item \textbf{2. Fault Tolerance} The system shall be able to recover from server failures without losing game state or significantly disrupting the player experience.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} In the event of a server failure, the backup server can take over within a reasonable time frame (e.g., under 5 seconds) and restore the game state, allowing players to continue without losing progress.
+  \end{itemize}
+
+  \item \textbf{3. Consistency} The system shall ensure that all clients have a consistent view of the game state at all times.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} After any player action, all clients receive the updated game state, and it reflects the same information across all clients without discrepancies.
+  \end{itemize}
+
+  \item \textbf{4. Horizontal Scalability} The system must support multiple server instances to handle an increasing number of concurrent game sessions and players.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} The system can run multiple server instances that can manage separate game sessions, and the load is distributed effectively without performance degradation as the number of players increases.
   \end{itemize}
 
 \end{itemize}
