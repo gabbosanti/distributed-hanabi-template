@@ -188,6 +188,33 @@ This section defines the requirements for transforming the Hanabi implementation
 
 \end{itemize}
 
+\subsection{Implementation Requirements}
+\label{Implementation Requirements}
+
+%
+\begin{itemize}
+  \item \textbf{1. Technology Stack} The system shall be implemented using Python for the server-side logic and React for the client-side interface.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} The server is implemented in Python, the client interface is built with React.
+  \end{itemize}
+
+  \item \textbf{2. Communication Protocol} The system shall use WebSockets for real-time communication between the server and clients.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} The server and clients communicate using WebSockets, allowing for real-time updates of the game state and player actions.
+  \end{itemize}
+
+  \item \textbf{3. Data Storage} The system shall use a Redis database to store game state and player information.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} Game state and player information are stored in Redis, and the system can retrieve and update this information as needed during gameplay.
+  \end{itemize}
+
+  \item \textbf{4. Containerization} The system shall be containerized using Docker to facilitate deployment and scalability.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} The application can be built and run using Docker, with a provided Dockerfile and docker-compose configuration for easy deployment.
+  \end{itemize}
+
+\end{itemize}
+
 \subsection{Relevant Distributed System Features}
 \label{ds-features}
 
