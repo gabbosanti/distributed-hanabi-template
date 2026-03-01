@@ -128,6 +128,42 @@ This section defines the requirements for transforming the Hanabi implementation
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Users can connect to the server, see a lobby with waiting players, and start a game when enough players have joined.
   \end{itemize}
+
+  \item \textbf{FR-02 — Game State Management} The system shall maintain a consistent game state across all clients, ensuring that all players see the same game state after each action.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} After a player takes an action, all clients receive the updated game state, and it reflects the action taken.
+  \end{itemize}
+
+  \item \textbf{FR-03 — Player Actions} The system shall allow players to perform valid game actions (e.g., give hints, play cards, discard cards) and update the game state accordingly.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} Players can perform actions based on the game rules and their teammates' cards, and the game state updates correctly based on those actions
+  \end{itemize}
+
+  \item \textbf{FR-04 — Persistent Game State} The system shall persist the game state to allow recovery in case of server failure.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} If the main server fails, the backup server can take over and restore the game state, allowing players to continue without losing progress.
+  \end{itemize}
+
+  \item \textbf{FR-05 — Player Identification} The system shall assign a unique identifier to each player to manage game sessions and actions.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} Each player receives a unique ID upon connecting, and the system uses this ID to track their actions and game state.
+  \end{itemize}
+
+  \item \textbf{FR-06 — Game Conclusion} The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} When the game ends (e.g., there are no cards left, or the number of misfires exceeds 3), all clients receive a notification with the final game state and the outcome (win/loss).    
+  \end{itemize}
+
+  \item \textbf{FR-07 — Player Disconnection Handling} The system shall handle player disconnections gracefully, allowing the game to continue if possible.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} If a player disconnects, the system allows the remaining players to continue the game, and the disconnected player can reconnect within a reasonable time frame without losing their progress.
+  \end{itemize}
+
+  \item \textbf{FR-08 — Security} The system shall implement basic security measures to protect player data and prevent unauthorized access.
+  \begin{itemize}
+    \item \textbf{Acceptance Criterion:} Player data is stored securely, and the system prevents unauthorized access to game sessions and player information through authentication.
+  \end{itemize}
+
 \end{itemize}
 
 \subsection{Relevant Distributed System Features}
