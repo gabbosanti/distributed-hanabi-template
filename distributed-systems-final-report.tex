@@ -122,39 +122,38 @@ This section defines the requirements for transforming the Hanabi implementation
 \subsection{Functional Requirements}
 \label{functional-requirements}
 
-%
 \begin{itemize}
-  \item \textbf{1. Lobby and Session Management} The system shall allow multiple users to connect, enter a lobby, and start a game session once the configured player threshold is reached.
+  \item \textbf{FR1 : Lobby and Session Management} The system shall allow multiple users to connect, enter a lobby, and start a game session once the configured player threshold is reached.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Users can connect to the server, see a lobby with waiting players, and start a game when enough players have joined.
   \end{itemize}
 
-  \item \textbf{2. Player Actions} The system shall allow players to perform valid game actions (e.g., give hints, play cards, discard cards) and update the game state accordingly.
+  \item \textbf{FR2 : Player Actions} The system shall allow players to perform valid game actions (e.g., give hints, play cards, discard cards) and update the game state accordingly.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Players can perform actions based on the game rules and their teammates' cards, and the game state updates correctly based on those actions
   \end{itemize}
 
-  \item \textbf{3. Player Identification} The system shall assign a unique identifier to each player to manage game sessions and actions.
+  \item \textbf{FR3 : Player Identification} The system shall assign a unique identifier to each player to manage game sessions and actions.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Each player receives a unique ID upon connecting, and the system uses this ID to track their actions and game state.
   \end{itemize}
 
-  \item \textbf{4. Game Conclusion} The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
+  \item \textbf{FR4 : Game Conclusion} The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} When the game ends (e.g., there are no cards left, or the number of misfires exceeds 3), all clients receive a notification with the final game state and the outcome (win/loss).    
   \end{itemize}
 
-  \item \textbf{5. Player Disconnection Handling} The system shall handle player disconnections gracefully, allowing the game to continue if possible.
+  \item \textbf{FR5 : Player Disconnection Handling} The system shall handle player disconnections gracefully, allowing the game to continue if possible.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} If a player disconnects, the system allows the remaining players to continue the game, and the disconnected player can reconnect within a reasonable time frame without losing their progress.
   \end{itemize}
 
-  \item \textbf{6. Security} The system shall implement basic security measures to protect player data and prevent unauthorized access.
+  \item \textbf{FR6 : Security} The system shall implement basic security measures to protect player data and prevent unauthorized access.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Player data is stored securely, and the system prevents unauthorized access to game sessions and player information through authentication.
   \end{itemize}
 
-  \item \textbf{7. User Interface} The system shall provide a user-friendly interface for players to interact with the game.
+  \item \textbf{FR7 : User Interface} The system shall provide a user-friendly interface for players to interact with the game.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Players can easily understand how to perform actions and view the game state through the interface, with clear visual cues for game elements and actions.
   \end{itemize}
@@ -166,22 +165,22 @@ This section defines the requirements for transforming the Hanabi implementation
 
 %
 \begin{itemize}
-  \item \textbf{1. Performance} The system shall respond to player actions and update the game state within an acceptable time frame to ensure a smooth gaming experience.
+  \item \textbf{NFR1 : Performance} The system shall respond to player actions and update the game state within an acceptable time frame to ensure a smooth gaming experience.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The system processes player actions and updates the game state within 500ms, ensuring that players experience minimal lag during gameplay.
   \end{itemize}
 
-  \item \textbf{2. Fault Tolerance} The system shall be able to recover from server failures without losing game state or significantly disrupting the player experience.
+  \item \textbf{NFR2 : Fault Tolerance} The system shall be able to recover from server failures without losing game state or significantly disrupting the player experience.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} In the event of a server failure, the backup server can take over within a reasonable time frame (e.g., under 5 seconds) and restore the game state, allowing players to continue without losing progress.
   \end{itemize}
 
-  \item \textbf{3. Consistency} The system shall ensure that all clients have a consistent view of the game state at all times.
+  \item \textbf{NFR3 : Consistency} The system shall ensure that all clients have a consistent view of the game state at all times.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} After any player action, all clients receive the updated game state, and it reflects the same information across all clients without discrepancies.
   \end{itemize}
 
-  \item \textbf{4. Horizontal Scalability} The system must support multiple server instances to handle an increasing number of concurrent game sessions and players.
+  \item \textbf{NFR4 : Horizontal Scalability} The system must support multiple server instances to handle an increasing number of concurrent game sessions and players.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The system can run multiple server instances that can manage separate game sessions, and the load is distributed effectively without performance degradation as the number of players increases.
   \end{itemize}
@@ -218,76 +217,42 @@ This section defines the requirements for transforming the Hanabi implementation
 \subsection{Relevant Distributed System Features}
 \label{ds-features}
 
-Motivate which distributed system features are relevant for your project, and which are not.
-%
+The project is designed as a distributed system and therefore takes into account the main characteristics and trade-offs typical of distributed architectures.
+
 \begin{itemize}
-  \item transparency
-  \begin{itemize}
-    \item does your system need to hide distribution details from users or developers?
-    \item is it important that failures, location, or replication are invisible?
-    
-    \item Transparency of replication/failure - hidden copies of the master may seamlessly take over in case of a failure. 
-  \end{itemize}
 
-  \item fault tolerance, dependability -- availability, reliability, integrity, maintainability, safety
-  \begin{itemize}
-    \item what happens if a component fails? is uninterrupted service required?
-    \item is data loss or corruption unacceptable?
-    Data loss/corruption is prevented on the transport level. 
-    \item how quickly must the system recover from faults?
-    The system needs to recover from fault in a time that ensures an acceptable level of availability to the users. 
-  \end{itemize}
+  \item \textbf{Fault Tolerance and Failover} : \newline
+  The system mitigates single points of failure at the application and storage level. 
+  Regarding the application layer, multiple stateless game server instances are deployed behind a load balancer, so that if one server crashes, new incoming connections can be redirected to another healthy instance. 
+  Since servers are stateless, no persistent game information is lost at the application level. 
+  Concerning the storage layer, game state is stored in Redis, configured with master/replica replication and Sentinel monitoring, allowing automatic failover in case of primary node failure.
+  However, the load balancer itself represents a remaining infrastructural single point of failure but its replication is considered outside the scope of the project due to complexity constraints. 
+  The system prioritizes consistency of the game state over continuous availability during rare infrastructural faults.
 
-  \item scalability
-  \begin{itemize}
-    \item will the system need to handle increasing numbers of users, requests, or data?
-    Yes. Multiple instances of game servers can get deployed and work in parallel. The scope for scalability is limited and so a simpler but less expandable deployment method will be used. The number of nodes that balance the demand on the system by creating and destroying server instances should grow proportionally to the total number of players, up to the level possible by the system's resources (memory,CPU).
-    \item is it expected to grow over time?
-    
-  \end{itemize}
+  \item \textbf{Scalability} : \newline
+  The system supports horizontal scalability by allowing multiple stateless server instances to operate in parallel behind a load balancer.
+  As the number of connected players increases, additional server instances can be deployed to distribute the workload. 
+  Scalability is ultimately bounded by infrastructural resources such as CPU, memory, and network capacity, as well as by the performance limits of the centralized data store.
 
-  \item security, trust
-  \begin{itemize}
-    \item is sensitive data being processed or stored?
-    It is possible to expand the system to allow for user authentication and for the need to arise for safely storing passwords. 
-    \item are there multiple user roles with different permissions?
-    \item is authentication or authorization required?
-    Authentication is required so that the system can conclude the user is precisely the one identified by the ID. 
-  \end{itemize}
+  \item \textbf{Security and Trust} : \newline
+  The architecture allows for future integration of user authentication mechanisms. 
+  Authentication ensures that a user is correctly associated with their identity and prevents impersonation. 
+  Secure password storage (e.g., hashing and salting) can be incorporated if persistent user accounts are introduced. 
+  Communication security (e.g., TLS) can be added to protect data in transit.
 
-  \item resource sharing
-  \begin{itemize}
-    \item do multiple users or components need access to shared resources?
-    \item is coordination or synchronization needed?
-    Synchronization is done by broadcasting the shared game state at each game turn. Game state is persistent so that a game can be restarted synchronously after any issues arise. The events of the game have a natural total ordering so event order can always be reconstructed. 
-  \end{itemize}
+  \item \textbf{Resource Sharing and Consistency} : \newline
+  The shared game state is centrally stored and accessed by all server instances, ensuring a single authoritative source of truth. 
+  Each game action is processed atomically and results in an updated state that is broadcast to all players in the session. 
+  Since the game is turn-based, events have a natural total ordering, simplifying consistency management. 
+  Persisting the game state enables recovery after server failures and guarantees that all clients observe a consistent view of the system.
 
-  % \item openness, interoperability, heterogeneity of components
-  % \begin{itemize}
-  %   \item Will your system interact with external systems or use components built with different technologies?
-  %   \item Is standardization or compatibility important?
-  % \end{itemize}
+  \item \textbf{Performance and Concurrency} : \newline
+  The system can handle multiple game sessions concurrently across different server instances. 
+  Within each game session, operations are inherently serialized due to the turn-based nature of the application, reducing concurrency conflicts. 
+  WebSocket connections allow efficient bidirectional communication without repeated connection overhead. 
+  Game state messages are transmitted in compact JSON format; therefore, bandwidth usage is modest under normal operating conditions. 
+  No strict real-time latency constraints are imposed, but the architecture aims to maintain responsive interaction for players under moderate load.
 
-  % \item evolvability, maintainability
-  % \begin{itemize}
-  %   \item Will the system need to be updated or extended after deployment?
-  %   \item Is long-term maintenance a concern?
-  % \end{itemize}
-
-  \item performance, concurrency, computation / communication efficiency, bandwidth
-  \begin{itemize}
-    \item Are there strict requirements on response time or throughput?
-    \item Will many operations happen in parallel?
-    The system will execute the called procedures on the different games concurrently. 
-    \item Is network usage a concern?
-    As the game state can be sent in reasonably sized JSON format messages, network issues are not expected to arise until extreme loads on the system. 
-  \end{itemize}
-
-%   \item economy, costs  
-%   \begin{itemize}
-%     \item Are there budget constraints for development, deployment, or operation?
-%     \item Is minimizing resource usage important?
-%   \end{itemize}
 \end{itemize}
 
 \section{Design}\label{design}
