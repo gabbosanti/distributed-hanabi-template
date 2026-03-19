@@ -4,7 +4,7 @@
 \usepackage{url}
 \usepackage{natbib}
 \usepackage{graphicx}
-\usepackage{cleveref} % this must be the last package to be loaded
+\usepackage{cleveref} % this must beptance Criterion:} When the game ends \footnote{There are no cards left, or the number of misfires exceeds 3}, all clients receive a notification with the final game state and the outcome (win/loss).    
 
 \newcommand{\emailaddr}[1]{\href{mailto:#1}{\texttt{#1}}}
 
@@ -263,7 +263,6 @@ You can re-arrange the sections as you prefer, but all the sections must be pres
 
 \textbf{Important:} try to motivate your design choices in relation to the requirements and features identified 
 in \cref{requirements} and \cref{ds-features}.
-
 }
 
 \subsection{Architecture}\label{architecture}
@@ -278,13 +277,20 @@ The system is composed of these architectural components.
 \begin{itemize}
   \item are there \emph{infrastructural components} that need to be introduced? \emph{how many}?
   %
-  \begin{itemize}
-    \item \textbf{Client :}
-    \item \textbf{Server :}
-    \item \textbf{Load Balancer :}
-    \item \textbf{Redis Master :}
-    \item \textbf{Redis Replica :}
-  \end{itemize}
+\begin{itemize}
+    \item \textbf{Client :} Represent the user that is willing to play. The interaction is made by his browser
+    \item \textbf{Server :} It's the core of the system : contains all of game logic, move validation and comunication with database
+    \item \textbf{Load Balancer :} Redirect traffic from multiple client node to servers, also guarantee fault tolerance in case of server crash.
+    \item \textbf{Redis Master :} It's the main node for storing data information about game and players
+    \item \textbf{Redis Replica :} It's a replication of the current database, useful in case of crash of master node
+\end{itemize}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/hanabi-architecture.png}
+    \caption{Overall architecture of the system}
+    \label{fig:placeholder}
+\end{figure}
 
   \item how do components \emph{distribute} over the network? \emph{where}?
   %
@@ -306,12 +312,7 @@ The system is composed of these architectural components.
 \begin{quote}
 Component diagrams are welcome here
 \end{quote}
-\begin{figure}
-    \centering
-    \includegraphics[width=1.0\linewidth]{figures/hanabi-architecture.png}
-    \caption{Overall architecture of the system}
-    \label{fig:placeholder}
-\end{figure}
+
 \subsection{Modelling}\label{modelling}
 % add objects and methods here 
 \begin{itemize}
@@ -620,14 +621,5 @@ It should be noted that each student is only responsible for their own section.
 Discuss possible future works, improvements, extensions, optimizations, etc.
 
 Also discuss here any unimplemented feature, and how you would have implemented it.
-
-\begin{thebibliography}{99}
-
-\bibitem{distributed-systems-book}
-Tanenbaum, A. S., \& Van Steen, M. (2017).
-\textit{Distributed systems: Principles and paradigms} (3rd ed.).
-Pearson Education.
-
-\end{thebibliography}
 
 \end{document}
