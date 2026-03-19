@@ -49,7 +49,7 @@ Here you should explain:
   \end{itemize}
 
 \subsection{Context}
-The software implements the game Hanabi, a 3-5 player cooperative board game, where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards. Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white). Information for your own cards must only be acquired through the strict communication methods the action systems permits. A successful game ends with 5 different colored decks in increasing order. 
+The software implements the game Hanabi, a 2-5 player cooperative board game, where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards. Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white). Information for your own cards must only be acquired through the strict communication methods the action systems permits. A successful game ends with 5 different colored decks in increasing order. 
 The users can run the program from different machines on the same network. 
 Each turn, one user does one of the allowed actions, then the updated game state is shared to all the users. 
 Each player can:
@@ -58,15 +58,25 @@ Each player can:
         \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card turns out to be in the wrong color, or lesser or equal to the topmost of that color deck, the move is considered unsuccessful and one of 3 life tokens is spent. Then he draws a card in the place of the played one. 
         \item \emph{Discard} one card from his hand and return one of the already spent tokens to the pool. The player must end each turn with the same amount of cards and so a new card is drawn. 
     \end{itemize}
-    The system needs to store basic player information - at least an unique ID, in order to conduct orderly match creation and orchestration. In addition, additional information about the player's previous success in game can provide an ordering system for better matchmaking. Afterwards, the system is expanded to store previous games per game ID so that they can be restarted. 
+The system needs to store basic player information such as unique ID, in order to conduct orderly match creation and orchestration.
+In addition, information about the player's previous success in game provide an ordering system for better matchmaking. 
+Afterwards, the system is expanded to store previous games per game ID so that they can be restarted. 
 
 \subsection{Use Case description}
 The aim of this project is to design and implement a distributed version of the game Hanabi.
-It consist on a web-based application, where players can connect to a server and play togheter directly from their browsers.
-A group between 2 and 5 players from distinct machines can play togheter and form a team, by starting the client and connecting to the central server.
+It consist on a web-based application, where players can connect to a server and play togheter directly from their browsers. 
+Once the client is connected to the server, login is required. Then a player can choose wheter to create a lobby to play with friends or join extisting ones.
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
 Playes visualize the game shared state on their clients and, on each turn, send command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
 
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/use-case-diagram.png}
+    \caption{Use case diagram of the system}
+    \label{fig:placeholder}
+\end{figure}
+
+\newpage
 \subsection{Reasons for distribution}
 
 {\scriptsize Why is distribution needed?
