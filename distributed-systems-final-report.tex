@@ -172,7 +172,7 @@ This section defines the requirements for transforming the Hanabi implementation
 
   \item \textbf{FR4 : Game Conclusion} The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
   \begin{itemize}
-    \item \textbf{Acceptance Criterion:} When the game ends (e.g., there are no cards left, or the number of misfires exceeds 3), all clients receive a notification with the final game state and the outcome (win/loss).    
+    \item \textbf{Acceptance Criterion:} When the game ends \footnote{There are no cards left, or the number of misfires exceeds 3}, all clients receive a notification with the final game state and the outcome (win/loss).    
   \end{itemize}
 
   \item \textbf{FR5 : Player Disconnection Handling} The system shall handle player disconnections gracefully, allowing the game to continue if possible.
@@ -321,6 +321,9 @@ in \cref{requirements} and \cref{ds-features}.
     \item e.g.~\emph{clients}, \emph{servers}, \emph{load balancers},
     \emph{caches}, \emph{databases}, \emph{proxies}, \emph{firewalls},
     \emph{CDNs}, \emph{etc.}
+    \item \emph{Client} process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned server process. 
+    \item \emph{Server} process that is dynamically spawned from the lobby. It manages communication with the client and forwards remote procedure calls to the application logic object.
+    \item \emph{Database} that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
   \end{itemize}
 
   \item how do components \emph{distribute} over the network? \emph{where}?
@@ -329,6 +332,7 @@ in \cref{requirements} and \cref{ds-features}.
     \item e.g.~do servers / brokers / databases / etc. sit on the same
     machine? on the same network? on the same datacenter? on the same
     continent?
+    The lobby,servers and the database are on the same network and communicate internally identified with IP adresses and ports. The clients on the other hand, can be geographically distributed, they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
   \end{itemize}
 
   \item how do components \emph{find} each other?
@@ -425,7 +429,7 @@ State diagrams are welcome here
   \end{itemize}
   
   \item how should \emph{persistent data} be \textbf{stored}?
-  Hash table sey-value store for O(1) insertions and reads, if ranked matchmaking needed (range queries) it can be b+ tree based. 
+  Hash table sey-value store for O(1) insertions and reads, if ranked matchmaking needed (range queries) the key value store can be b+ tree based. 
   % KV store ig player id to player info. 
   \begin{itemize}
     \item e.g.~relations, documents, key-value, graph, etc.
@@ -434,12 +438,12 @@ State diagrams are welcome here
   
   \item Which components perform queries on the database?
   %
-  The matchmaker that spawns matches. 
+  The servers perform read and write queries for their own game.
   \begin{itemize}
     \item \emph{when}? \emph{which} queries? \emph{why}?
-    Query for a number of players to create a lobby, if enough are online currently. 
+    The database represents a single source of truth for the state of each current or stopped game. To prevent desynchronizations, the servers are obliged to query the database for current state of their respective game.
     \item concurrent read? concurrent write? why?
-    hmm ? ex writes online state for player when reading online players problem 
+    % if we extend the system to multiple lobbies, concurrent reads/writes will be possible as in spawning multiple servers at the same time, the servers sending concurrent msgs about game over that have to be read.
   \end{itemize}
   
   \item Is there any data that needs to be shared between components?
@@ -464,6 +468,8 @@ State diagrams are welcome here
   % currently client polls constantly. We can impl heartbeat so that server ends the game if client on turn not responding. 
   \begin{itemize}
     \item \emph{why}? \emph{among} which components? \emph{how} does it work?
+    \item A \emph{retry} mechanism is implemented when a server is writing to its entry in the database. If the master has been changed due to a fault, the new master will have to be rediscovered before getting reached with the request properly. Rediscovery proceeds when the number of attempts to reach the database is exhausted.
+    \item A \emph{timeout} mechanism is implemented between the client and the server. If the client has not sent a user prompt for a certain amount of time, the server can announce to the matchmaker that the game is over and gracefully release all resources taken.
   \end{itemize}
   
   \item Is there any form of \textbf{error handling}?
@@ -471,7 +477,9 @@ State diagrams are welcome here
   \begin{itemize}
     \item \emph{what} happens when a component fails? \emph{why}? \emph{how}?
   \end{itemize}
-  When redis master server fails, a replica is promoted if consensus exists. If the master rejoins again, he is informed that he is demoted to a replica. 
+  The client and server structure the messages so that all communication proceeds in a predictable way and messages are always well-formed. 
+  If a client disconnects, the matchmaker redirects the client to the server. After reconnection, the server sends the up-to-date state of the game to the client. 
+  When redis master server fails, a replica is promoted if consensus between all live replicas exists. If the master rejoins again, he is informed that he is demoted to a replica and should act properly. When a server fails for any reason, the matchmaker cleans up the server's resources and the clients must restart the process to create and play a game by rejoining the lobby.
 \end{itemize}
 
 \subsection{Availability}\label{availability}
@@ -479,13 +487,13 @@ Availability is permitted by a level of fault tolerance.
 %write more here 
 \begin{itemize}
   \item Is there any \textbf{caching} mechanism?
-    The client process saves a local copy of the last received state. When issues arise this copy can serve as a fallback so that availability is prioritized over consistency. 
+    The client process saves a local copy of the last received state. When issues arise this copy can serve as a fallback to guarantee UI consistency. 
   \begin{itemize}
     \item \emph{where}? \emph{why}?
   \end{itemize}
   
   \item Is there any form of \textbf{load balancing}?
-  %
+  % we need to think about how it is implemented. i think it will be at the level of parallel working lobbies.
   \begin{itemize}
     \item \emph{where}? \emph{why}?
   \end{itemize}
@@ -514,7 +522,7 @@ Availability is permitted by a level of fault tolerance.
   \end{itemize}
 
   \item Are \textbf{cryptographic schemas} being used?
-  % we could add this if in mood but idk if worth the effort 
+  % we could add this if in mood but idk if worth the effort. some hash in the codec file so msgs get hashed and hash checked?
   \begin{itemize}
     \item e.g.~token verification,
     \item e.g.~data encryption, etc.
@@ -530,25 +538,25 @@ Please report here all the implementation (technology-dependent) choices you mad
   \item which \textbf{network protocols} to use?
   %
   \begin{itemize}
-    \item TCP,WebSockets,
+    \item To guarantee reliable message delivery, TCP is used. Connections between clients and servers and servers and the matchmaker are carefully managed in the application logic. 
   \end{itemize}
   
   \item how should \emph{in-transit data} be \textbf{represented}?
   %
   \begin{itemize}
-    \item JSON dictionary
+    \item In-transit data is in general Python dictionaries serialized as JSON objects. At the receiving end, the inverse decoding is implemented, both using the json python package.
   \end{itemize}
   
   \item how should \emph{databases} be \textbf{queried}?
   %
   \begin{itemize}
-    \item Queries by key. 
+    \item The Redis game database is queried per the game id. 
   \end{itemize}
   
   \item how should components be \emph{authenticated}?
   %
   \begin{itemize}
-    \item OAuth perhaps
+    \item OAuth perhaps. I am not familiar with this. 
   \end{itemize}
 
 \end{itemize}
