@@ -324,50 +324,67 @@ in \cref{requirements} and \cref{ds-features}.
 The distributed system follows a three-tier, layered architecture.
 This ensures a clear separation of concern and responsabilities.
   \begin{itemize}
-    \item Presentation Tier : is composed by the client user
-    \item Logic Tier : is composed by the server
-    \item Data Tier : is composed by the database
+    \item Presentation Tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send command to the game server. 
+    \item Logic Tier is composed by the game server. It is responsible for executing commands sent from the client in a precise format.
+    \item Data Tier is composed by the database. The role is to store important data such as user and game information.
   \end{itemize}
+
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/layered-architecture.png}
+    \caption{Overall architecture of the distributed system}
+\end{figure}
 
 In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. 
 After each update,the new state is broadcasted to all the players. 
 %\footnote{According to the popular board gaming website boardgamearena 
 %\cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.}
 
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/layered-architecture.png}
-    \caption{Caption}
-\end{figure}
+The game server internal architecture has been designed to have a level approach, so each component has a different responsability.
+  \begin{itemize}
+    \item Domain level contains all the game Logic and it's responsible of applying game rules and modify game state accordingly.
+    \item Application level aims at executing commands coming from the client and address the operation to the correct use case.
+    \item Infrastructure level is responsible of interacting with the database by updating and retrieving information.
+    \item Presentation level directly communicate with the client and manages communications.
+  \end{itemize}
 
 \subsection{Infrastructure}\label{infrastructure}
 
-\begin{itemize}
-  \item are there \emph{infrastructural components} that need to be introduced? \emph{how many}?
-  %
+  \scriptsize{
+  Are there \emph{infrastructural components} that need to be introduced? \emph{how many}?
   \begin{itemize}
     \item e.g.~\emph{clients}, \emph{servers}, \emph{load balancers},
     \emph{caches}, \emph{databases}, \emph{proxies}, \emph{firewalls},
     \emph{CDNs}, \emph{etc.}
   \end{itemize}
+  }
 
-  \item how do components \emph{distribute} over the network? \emph{where}?
-  %
+  As anticipated in section \ref{architecture}, the distributed system is composed by three component :
+    \begin{itemize}
+      \item multiple client
+      \item game server, one for each game, which is spawned as a docker containerization
+      \item redis database, composed of master and replica
+  \end{itemize}
+
+  \scriptsize{
+  How do components \emph{distribute} over the network? \emph{where}?
   \begin{itemize}
     \item e.g.~do servers / brokers / databases / etc. sit on the same
     machine? on the same network? on the same datacenter? on the same
     continent?
   \end{itemize}
+  }
 
-  \item how do components \emph{find} each other?
-  %
+  \scriptsize{
+  How do components \emph{find} each other?
   \begin{itemize}
     \item how to \emph{name} components?
     \item e.g.~DNS, \emph{service discovery}, \emph{load balancing},
     \emph{etc.}
   \end{itemize}
-\end{itemize}
-
+  }
+  
 \begin{quote}
 Component diagrams are welcome here
 \end{quote}
@@ -417,7 +434,7 @@ Class diagram are welcome here
   \item \emph{which} \textbf{interaction patterns} do they enact?
 \end{itemize}
 %R-R as mentioned before? maybe put that here 
-%sequence diagram on that 
+%sequence diagram on that components
 \begin{quote}
 Sequence diagrams are welcome here
 \end{quote}
