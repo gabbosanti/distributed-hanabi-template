@@ -245,7 +245,7 @@ The focus is not only game functionality, but also distributed coordination, con
     \item \textbf{Acceptance Criterion:} The server is implemented in Python, the client interface is built with React.
   \end{itemize}
 
-  \item \textbf{IR2 :Communication Protocol} \newline
+  \item \textbf{IR2 : Communication Protocol} \newline
   The system shall use WebSockets for real-time communication between the server and clients.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The server and clients communicate using WebSockets, allowing for real-time updates of the game state and player actions.
@@ -273,8 +273,7 @@ The project is designed as a distributed system and therefore takes into account
 \begin{itemize}
 
   \item \textbf{Fault Tolerance and Failover} : \newline
-  The system mitigates single points of failure at the application and storage level. 
-  Regarding the application layer, multiple stateless game server instances are deployed behind a load balancer, so that if one server crashes, new incoming connections can be redirected to another healthy instance. 
+  The system mitigates single points of failure both at storage level. 
   Since servers are stateless, no persistent game information is lost at the application level. 
   Concerning the storage layer, game state is stored in Redis, configured with master/replica replication and Sentinel monitoring, allowing automatic failover in case of primary node failure.
   However, the load balancer itself represents a remaining infrastructural single point of failure but its replication is considered outside the scope of the project due to complexity constraints. 
@@ -308,6 +307,7 @@ The project is designed as a distributed system and therefore takes into account
 
 \section{Design}\label{design}
 
+\scriptsize{
 This chapter explains the strategies used to meet the requirements identified in the analysis. 
 Ideally, the design should be the same, regardless of the technological choices made during the implementation phase.
 
@@ -318,18 +318,27 @@ You can re-arrange the sections as you prefer, but all the sections must be pres
 \noindent
 \textbf{Important:} try to motivate your design choices in relation to the requirements and features identified 
 in \cref{requirements} and \cref{ds-features}.
-
+}
 \subsection{Architecture}\label{architecture}
 
-\begin{itemize}
-  \item Which architectural style?
-  %
+The distributed system follows a three-tier, layered architecture.
+This ensures a clear separation of concern and responsabilities.
   \begin{itemize}
-    \item \emph{Client-server architecture}. In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. After each update, executed as a remote procedure call upon the GameState object, the new state is broadcasted to all the players. This enables for a separation between the application logic in the GameState object and the communicational logic in the Server object. \footnote{According to the popular board gaming website boardgamearena \cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.} 
-    \item \emph{Request-Response Remote Procedure Calling} upon the remote object GameState. The server unmarshalls the client's request, calls a remote procedure with the relevant sent parameters and marshalls a response in the corresponding JSON format. The client is unaware that the the game is executed on another device (transparency of location). 
-    % add more here 
+    \item Presentation Tier : is composed by the client user
+    \item Logic Tier : is composed by the server
+    \item Data Tier : is composed by the database
   \end{itemize}
-\end{itemize}
+
+In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. 
+After each update,the new state is broadcasted to all the players. 
+%\footnote{According to the popular board gaming website boardgamearena 
+%\cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.}
+
+\begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/layered-architecture.png}
+    \caption{Caption}
+\end{figure}
 
 \subsection{Infrastructure}\label{infrastructure}
 
@@ -362,12 +371,6 @@ in \cref{requirements} and \cref{ds-features}.
 \begin{quote}
 Component diagrams are welcome here
 \end{quote}
-\begin{figure}
-    \centering
-    \includegraphics[width=0.5\linewidth]{figures/почеток-архитектура.png}
-    \caption{Caption}
-    \label{fig:placeholder}
-\end{figure}
 \subsection{Modelling}\label{modelling}
 % add objects and methods here 
 \begin{itemize}
@@ -678,6 +681,7 @@ Discuss possible future works, improvements, extensions, optimizations, etc.
 Also discuss here any unimplemented feature, and how you would have implemented it.
 
 \bibliographystyle{plain}
+\nocite{*}
 \bibliography{references}
 
 \end{document}
