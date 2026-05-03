@@ -1,0 +1,36 @@
+@startuml
+actor Client
+
+participant "Presentation Layer" as Presentation
+participant "Application Layer" as Application
+participant "Repository" as Repository
+
+
+Client -> Presentation : login(username, password)
+Presentation -> Application : handleLogin(command)
+
+Application -> Repository : checkUserExists(username)
+Repository --> Application : userExists / notFound
+
+alt User exists
+Application -> Repository : checkPassword()
+Repository --> Application : passwordCorrect / wrong
+    alt Authentication succesful
+        Application -> Repository : checkExistingGame(username)
+        Repository --> Application : gameExists / notFound
+            alt Game Exist
+                Application -> Repository : loadGame(gameID)
+                Repository -->  Client : playerReconnected()
+            else Game not found
+                Application --> Client : loginSuccess()
+            end
+    else Authentication failed
+        Application --> Presentation  : error("Invalid Username/Password")
+        Presentation --> Client : error("Invalid Username/Password")
+    end
+else User not found
+    Application --> Presentation : error("Username not found")
+    Presentation --> Client : error("Username not found")
+end
+
+@enduml

@@ -1,0 +1,32 @@
+@startuml
+actor Client
+
+participant "Presentation Layer" as Presentation
+participant "Application Layer" as Application
+participant "User Repository" as Repository
+
+Client -> Presentation : register(fullName, username, email, password)
+Presentation -> Application : handleRegister(command)
+
+Application -> Application : createUser()
+
+Application -> Repository : checkUserExists(username)
+Repository --> Application : userExists / notFound
+
+alt Username already exists
+    Application --> Presentation : error("Username already exists")
+    Presentation --> Client : showError()
+else Username available
+    Application -> Repository : persistUser(user)
+    Repository --> Application : repositoryFail / Success
+
+    alt Repository failure
+        Application --> Presentation : error("Temporary server issue")
+        Presentation --> Client : showError()
+    else Success
+        Application --> Presentation : registrationSuccess()
+        Presentation --> Client : showSuccess()
+    end
+end
+
+@enduml

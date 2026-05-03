@@ -1,0 +1,110 @@
+@startuml
+
+' --- Definizione delle Classi ed Enum ---
+enum Number {
+  ONE
+  TWO
+  THREE
+  FOUR
+  FIVE
+}
+
+enum Colour {
+  WHITE
+  RED
+  YELLOW
+  BLUE
+  GREEN
+}
+
+class Card {
+  - number : Number
+  - colour : Colour
+}
+
+class Deck {
+  - cards : list[Card]
+  + draw() : Card | None
+  + shuffle() : void
+  + lastCard() : bool
+  + get_deck_count() : void
+}
+
+class Board {
+  - deck : Deck
+  - piles : dict[Colour, int]
+  - discards : list[Card]
+  - token : int
+  - misfires : int
+  --
+  + calculateScore() : int
+  + addDiscard(Card) : void
+  + drawCard() : HandCard | None
+  + updateToken(mode: str) : void
+  + discardMisfire() : void
+  + updatePiles(Card) : void
+  + completedPiles() : void
+  + calculateScore() : void
+}
+
+class HandCard {
+  - card : Card
+  - hintColour : Colour
+  - hintNumber : Number
+  + removeHints() : void
+}
+
+class Player {
+  - username : str
+  - hand : list[HandCard]
+  - lastTurn : bool
+  + addCard(HandCard) : void
+  + addCardAt(cardIndex : int, HandCard) : void
+  + removeCard(cardIndex : int) : void
+  + getLastTurn() : bool
+  + setLastTurn(bool) : void
+}
+
+class Game {
+  - gameID: String
+  - board: Board
+  - players : list[Player]
+  - playerTurn : str
+  --
+  + playCard(username : str, cardIndex : int): void
+  + giveHint(username : str, cardIndex : list[int] , hintType : str, value : str): void
+  + discardCard(username : str, cardIndex : int): void
+  ..
+  + canPlay(username : str, board : Board | None)
+  + changeTurn() : void
+  + checkGameOver() : int | None
+}
+
+' --- Relazioni ---
+
+' Relazioni da Card a Enums
+Card --> Number
+Card --> Colour
+
+' Relazione HandCard -> Card
+HandCard -up-> Card
+
+' Relazione Board -> Deck
+Board -left-> Deck
+
+' Relazione Deck -> Card (con molteplicità)
+Deck "50" -right- "1" Card
+
+' Relazione Board -> Card (discards)
+Board -down-> Card
+
+' Relazione Game -> Board
+Game -up-> Board
+
+' Relazione Game -> Player (con molteplicità 2..5)
+Game "1" -down-> "2..5" Player
+
+' Relazione Player -> HandCard
+Player -left-> HandCard
+
+@enduml
