@@ -351,34 +351,29 @@ The game server internal architecture has been designed to have a level approach
 
 \subsection{Infrastructure}\label{infrastructure}
 
-  \scriptsize{
-  Are there \emph{infrastructural components} that need to be introduced? \emph{how many}?
+As anticipated in section \ref{architecture}, the distributed system is composed by three component :
   \begin{itemize}
-    \item e.g.~\emph{clients}, \emph{servers}, \emph{load balancers},
-    \emph{caches}, \emph{databases}, \emph{proxies}, \emph{firewalls},
-    \emph{CDNs}, \emph{etc.}
-    \item \emph{Client} process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned server process. 
-    \item \emph{Server} process that is dynamically spawned from the lobby. It manages communication with the client and forwards remote procedure calls to the application logic object.
+    \item \emph{Client} process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned game server process. 
+    \item \emph{Server} process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
     \item \emph{Database} that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
   \end{itemize}
-  }
-
-  As anticipated in section \ref{architecture}, the distributed system is composed by three component :
-    \begin{itemize}
-      \item multiple client
-      \item game server, one for each game, which is spawned as a docker containerization
-      \item redis database, composed of master and replica
-  \end{itemize}
-
+ 
+  \begin{figure}
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/hanabi-architecture.png}
+    \caption{Overall architecture of the distributed system}
+  \end{figure}
+  
   \scriptsize{
   How do components \emph{distribute} over the network? \emph{where}?
   \begin{itemize}
     \item e.g.~do servers / brokers / databases / etc. sit on the same
     machine? on the same network? on the same datacenter? on the same
     continent?
-    The lobby,servers and the database are on the same network and communicate internally identified with IP adresses and ports. The clients on the other hand, can be geographically distributed, they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
   \end{itemize}
   }
+  The servers and the database are on the same network and communicate internally identified with IP adresses and ports.
+  The clients on the other hand, can be geographically distributed, they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
 
   \scriptsize{
   How do components \emph{find} each other?
@@ -572,28 +567,23 @@ Availability is permitted by a level of fault tolerance.
 
 Please report here all the implementation (technology-dependent) choices you made while implementing your design.
 
-
 \begin{itemize}
   \item which \textbf{network protocols} to use?
-  %
-  \begin{itemize}
-    \item To guarantee reliable message delivery, TCP is used. Connections between clients and servers and servers and the matchmaker are carefully managed in the application logic. 
-  \end{itemize}
+    To guarantee reliable message delivery, TCP is used. Connections between clients and servers and servers and the matchmaker are carefully managed in the application logic.
+    On top of that, WebSocket communication has been used as an application layer protocol. This ensure fast, reliable and bi-directional comunication, which makes it the best choice for real time gaming.  
   
   \item how should \emph{in-transit data} be \textbf{represented}?
-  %
   \begin{itemize}
-    \item In-transit data is in general Python dictionaries serialized as JSON objects. At the receiving end, the inverse decoding is implemented, both using the json python package.
+    \item In-transit data are exchanged between backend and frontend. As a common understanding language, JSON format has been chosen for his semplicityis in general Python dictionaries serialized as JSON objects.
+    At the receiving end, the inverse decoding is implemented, both using the json python package.
   \end{itemize}
   
   \item how should \emph{databases} be \textbf{queried}?
-  %
   \begin{itemize}
     \item The Redis game database is queried per the game id. 
   \end{itemize}
   
   \item how should components be \emph{authenticated}?
-  %
   \begin{itemize}
     \item OAuth perhaps. I am not familiar with this. 
   \end{itemize}
@@ -601,6 +591,11 @@ Please report here all the implementation (technology-dependent) choices you mad
 \end{itemize}
 
 \subsection{Technological details}\label{technological-details}
+Concerning the server backend part, the language used was python, with the use of the external framework FastAPI:
+FastAPI \dots
+
+The server frontend part has been realized using React, Vite and Typescript.
+\dots
 
 \begin{itemize}
   \item any particular \emph{framework} / \emph{technology} being exploited goes here
