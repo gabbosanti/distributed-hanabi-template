@@ -321,7 +321,7 @@ in \cref{requirements} and \cref{ds-features}.
 }
 \subsection{Architecture}\label{architecture}
 
-The distributed system follows a three-tier, layered architecture.
+The distributed system follows a three-tier, layered architecture.An intuitive representation is shown in figure \ref{layered-architecture}
 This ensures a clear separation of concern and responsabilities.
   \begin{itemize}
     \item Presentation Tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send command to the game server. 
@@ -329,25 +329,17 @@ This ensures a clear separation of concern and responsabilities.
     \item Data Tier is composed by the database. The role is to store important data such as user and game information.
   \end{itemize}
 
-
 \begin{figure}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/layered-architecture.png}
+    \includegraphics[width=1.0\linewidth]{figures/layered-architecture.png}
     \caption{Overall architecture of the distributed system}
+    \label{layered-architecture}
 \end{figure}
 
 In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. 
 After each update,the new state is broadcasted to all the players. 
 %\footnote{According to the popular board gaming website boardgamearena 
 %\cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.}
-
-The game server internal architecture has been designed to have a level approach, so each component has a different responsability.
-  \begin{itemize}
-    \item Domain level contains all the game Logic and it's responsible of applying game rules and modify game state accordingly.
-    \item Application level aims at executing commands coming from the client and address the operation to the correct use case.
-    \item Infrastructure level is responsible of interacting with the database by updating and retrieving information.
-    \item Presentation level directly communicate with the client and manages communications.
-  \end{itemize}
 
 \subsection{Infrastructure}\label{infrastructure}
 
@@ -356,6 +348,11 @@ As anticipated in section \ref{architecture}, the distributed system is composed
     \item \emph{Client} process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned game server process. 
     \item \emph{Server} process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
     \item \emph{Database} that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
+    Database component is divided in :
+      \begin{itemize}
+        \item Master is the single source of truth.
+        \item Replica contains replicated copy of data. This ensures fault tolerance in case of fault tolerance of the master.
+      \end{itemize}
   \end{itemize}
  
   \begin{figure}
@@ -388,43 +385,55 @@ As anticipated in section \ref{architecture}, the distributed system is composed
 Component diagrams are welcome here
 \end{quote}
 \subsection{Modelling}\label{modelling}
-% add objects and methods here 
-\begin{itemize}
-  \item which \textbf{domain entities} are there?
-  %
+
+  The game server internal architecture has been designed to have a level approach, so each component has a different responsability.
   \begin{itemize}
-    \item e.g.~\emph{users}, \emph{products}, \emph{orders}, \emph{etc.}
-  \end{itemize}
-  
-  \item how do \emph{domain entities} \textbf{map to} \emph{infrastructural components}?
-  %
-  \begin{itemize}
-    \item e.g.~state of a video game on central server, while inputs/representations on clients
-    \item e.g.~where to store messages in an IM app? for how long?
+    \item Domain level contains all the game Logic and it's responsible of applying game rules and modify game state accordingly.
+    \item Application level aims at executing commands coming from the client and address the operation to the correct use case.
+    \item Infrastructure level is responsible of interacting with the database by updating and retrieving information.
+    \item Presentation level directly communicate with the client and manages communications.
   \end{itemize}
 
-  \item which \textbf{domain events} are there?
-  %
+  \subsubsection{Domain}
+  The core class is Game, which mantains all the information of a started game.
+  Its responsability is to execute a player move, by applying internal game rules, and update current state.
+  Regardless the move a player can do (play card, discard, give hint), it is first checked if player turn is correct. Finally, unless a gameover situation occurs, the turn is changed to another player
+  \newline
+  Board class is a representation of board game: contains all the information of card played on the table, misfires and tokens. It has been separated from Game class to better address roles and responsabilities and facilitate testing and debug.
+  \newline
+  In the domain there is a distinction between User and Player. The player is a user that joined or created a lobby and is part of a started game.
+  User just contains personal information for authenticate on the system.
+  \newline
+  (I will put class diagram here)
+
+  \subsubsection{Application}
   \begin{itemize}
-    \item e.g.~\emph{user registered}, \emph{product added to cart}, \emph{order placed}, \emph{etc.}
-  \end{itemize}
-  
-  \item which sorts of \textbf{messages} are exchanged?
-  %
-  \begin{itemize}
-    \item e.g.~\emph{commands}, \emph{events}, \emph{queries}, \emph{etc.}
+    \item how do \emph{domain entities} \textbf{map to} \emph{infrastructural components}?
+    %
+    \begin{itemize}
+      \item e.g.~state of a video game on central server, while inputs/representations on clients
+      \item e.g.~where to store messages in an IM app? for how long?
+    \end{itemize}
+
+    \item which \textbf{domain events} are there?
+    %
+    \begin{itemize}
+      \item e.g.~\emph{user registered}, \emph{product added to cart}, \emph{order placed}, \emph{etc.}
+    \end{itemize}
+    
+    \item which sorts of \textbf{messages} are exchanged?
+    %
+    \begin{itemize}
+      \item e.g.~\emph{commands}, \emph{events}, \emph{queries}, \emph{etc.}
+    \end{itemize}
+
+    \item what information does the \textbf{state} of the system comprehend
+    %
+    \begin{itemize}
+      \item e.g.~\emph{users' data}, \emph{products' data}, \emph{orders' data}, \emph{etc.}
+    \end{itemize}
   \end{itemize}
 
-  \item what information does the \textbf{state} of the system comprehend
-  %
-  \begin{itemize}
-    \item e.g.~\emph{users' data}, \emph{products' data}, \emph{orders' data}, \emph{etc.}
-  \end{itemize}
-\end{itemize}
-
-\begin{quote}
-Class diagram are welcome here
-\end{quote}
 
 \subsection{Interaction}\label{interaction}
 
@@ -490,6 +499,9 @@ State diagrams are welcome here
 \subsection{Fault-Tolerance}\label{fault-tolerance}
 
 \begin{itemize}
+
+
+
   \item Is there any form of data \textbf{replication} / federation / sharing?
   % data repl i think not. 
   
@@ -562,6 +574,9 @@ Availability is permitted by a level of fault tolerance.
     \item e.g.~data encryption, etc.
   \end{itemize}
 \end{itemize}
+
+User must authenticate with username and password. 
+Validation occurs in the server side. Moreover, an hashed password is saved in the database insted of plaintext. The cypher algorithm sha256 is used.
 
 \section{Implementation}\label{implementation}
 
