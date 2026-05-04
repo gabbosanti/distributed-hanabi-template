@@ -31,7 +31,6 @@
 \begin{abstract}
 Hanabi is a cooperative multiplayer card game for 2-5 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
-
 \section{Concept}\label{concept}
 
 Here you should explain:
@@ -72,9 +71,9 @@ Then a player can choose wheter to create a lobby to play with other players or 
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
 Players visualize the game shared state on their clients and, on each turn, send command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
 
-\begin{figure}
+\begin{figure}[h!]
     \centering
-    \includegraphics[width=1.0\linewidth]{figures/use-case-diagram.png}
+    \includegraphics[width=0.8\linewidth]{figures/use-case-diagram.png}
     \caption{Use case diagram of the system}
 \end{figure}
 
@@ -329,9 +328,9 @@ This ensures a clear separation of concern and responsabilities.
     \item Data Tier is composed by the database. The role is to store important data such as user and game information.
   \end{itemize}
 
-\begin{figure}
+\begin{figure}[h!]
     \centering
-    \includegraphics[width=1.0\linewidth]{figures/layered-architecture.png}
+    \includegraphics[width=0.5\linewidth]{figures/layered-architecture.png}
     \caption{Overall architecture of the distributed system}
     \label{layered-architecture}
 \end{figure}
@@ -355,7 +354,7 @@ As anticipated in section \ref{architecture}, the distributed system is composed
       \end{itemize}
   \end{itemize}
  
-  \begin{figure}
+  \begin{figure}[h!]
     \centering
     \includegraphics[width=0.5\linewidth]{figures/hanabi-architecture.png}
     \caption{Overall architecture of the distributed system}
@@ -437,15 +436,30 @@ Component diagrams are welcome here
 
 \subsection{Interaction}\label{interaction}
 
-\begin{itemize}
-  \item how do components \emph{communicate}? \emph{when}? \emph{what}?
-  \item \emph{which} \textbf{interaction patterns} do they enact?
-\end{itemize}
-%R-R as mentioned before? maybe put that here 
-%sequence diagram on that components
-\begin{quote}
-Sequence diagrams are welcome here
-\end{quote}
+Client and server interact with a request-response interaction protocol.
+The client always has the initiative in the comunication and send well-formatted commands to the server.
+It is responsible of validating the command, applying game rules and update the current game state. After that, one or multiple events are sent back to the client.
+The only case in which the server automatically send event to the client is when the current player's turn is expired. In this case the game forces to change turn to the next player.
+For each command a sequence diagram representation is shown. In the case of game command, all the three moves are in the same diagram for semplicity.
+
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/registration-sequence-diagram.png}
+    \caption{User registration sequence diagram}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/login-sequence-diagram.png}
+    \caption{User login sequence diagram}
+\end{figure}
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/player-game-move-sequence-diagram.png}
+    \caption{User game move sequence diagram}
+\end{figure}
 
 \subsection{Behaviour}\label{behaviour}
 
@@ -499,8 +513,6 @@ State diagrams are welcome here
 \subsection{Fault-Tolerance}\label{fault-tolerance}
 
 \begin{itemize}
-
-
 
   \item Is there any form of data \textbf{replication} / federation / sharing?
   % data repl i think not. 
