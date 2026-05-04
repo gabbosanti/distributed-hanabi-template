@@ -1,0 +1,26 @@
+@startuml
+
+[*] --> GameCreated
+
+GameCreated -left-> InProgress : [startGame]
+
+state InProgress {
+
+    [*] -left-> WaitingCommand
+
+    WaitingCommand --> ProcessingMove : [receiveCommand]
+
+    ProcessingMove --> ApplyingMove : [validMove]
+    ProcessingMove --> WaitingCommand : [invalidMove]
+
+    ApplyingMove : do / updateBoard()
+    ApplyingMove -right-> CheckingEnd : [applyEffects]
+    
+    CheckingEnd --> GameEnded : [gameOver]
+    CheckingEnd --> WaitingCommand : [nextPlayer]
+
+}
+
+GameEnded --> [*]
+
+@enduml

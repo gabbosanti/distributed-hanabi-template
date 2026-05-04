@@ -306,21 +306,9 @@ The project is designed as a distributed system and therefore takes into account
 
 \section{Design}\label{design}
 
-\scriptsize{
-This chapter explains the strategies used to meet the requirements identified in the analysis. 
-Ideally, the design should be the same, regardless of the technological choices made during the implementation phase.
-
-\begin{quote}
-You can re-arrange the sections as you prefer, but all the sections must be present in the end
-\end{quote}
-
-\noindent
-\textbf{Important:} try to motivate your design choices in relation to the requirements and features identified 
-in \cref{requirements} and \cref{ds-features}.
-}
 \subsection{Architecture}\label{architecture}
 
-The distributed system follows a three-tier, layered architecture.An intuitive representation is shown in figure \ref{layered-architecture}
+The distributed system follows a three-tier, layered architecture. An intuitive representation is shown in figure \ref{layered-architecture}
 This ensures a clear separation of concern and responsabilities.
   \begin{itemize}
     \item Presentation Tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send command to the game server. 
@@ -336,7 +324,7 @@ This ensures a clear separation of concern and responsabilities.
 \end{figure}
 
 In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. 
-After each update,the new state is broadcasted to all the players. 
+After each update, the new state is broadcasted to all the players. 
 %\footnote{According to the popular board gaming website boardgamearena 
 %\cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.}
 
@@ -360,36 +348,15 @@ As anticipated in section \ref{architecture}, the distributed system is composed
     \caption{Overall architecture of the distributed system}
   \end{figure}
   
-  \scriptsize{
-  How do components \emph{distribute} over the network? \emph{where}?
-  \begin{itemize}
-    \item e.g.~do servers / brokers / databases / etc. sit on the same
-    machine? on the same network? on the same datacenter? on the same
-    continent?
-  \end{itemize}
-  }
   The servers and the database are on the same network and communicate internally identified with IP adresses and ports.
   The clients on the other hand, can be geographically distributed, they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
-
-  \scriptsize{
-  How do components \emph{find} each other?
-  \begin{itemize}
-    \item how to \emph{name} components?
-    \item e.g.~DNS, \emph{service discovery}, \emph{load balancing},
-    \emph{etc.}
-  \end{itemize}
-  }
   
-\begin{quote}
-Component diagrams are welcome here
-\end{quote}
 \subsection{Modelling}\label{modelling}
 
   The game server internal architecture has been designed to have a level approach, so each component has a different responsability.
   \begin{itemize}
     \item Domain level contains all the game Logic and it's responsible of applying game rules and modify game state accordingly.
     \item Application level aims at executing commands coming from the client and address the operation to the correct use case.
-    \item Infrastructure level is responsible of interacting with the database by updating and retrieving information.
     \item Presentation level directly communicate with the client and manages communications.
   \end{itemize}
 

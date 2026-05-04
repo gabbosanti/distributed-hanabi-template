@@ -1,0 +1,37 @@
+@startuml
+actor Client
+
+participant "Presentation Layer" as Presentation
+participant "Application Layer" as Application
+participant "Repository" as Repository
+
+Client -> Presentation : lobbyCommand()
+Presentation -> Application : handleCommand()
+
+alt Create lobby
+
+Application -> Application : create_lobby()
+Application --> Presentation : lobby created
+
+else Join lobby
+Application -> Application : join_lobby()
+
+    alt Waiting for player
+        Application --> Presentation
+        Presentation --> Client
+    else Lobby full
+        Application -> Application : create_game()
+        
+        Application -> Repository : saveGame(game)
+        Repository --> Application : game state saved
+        
+        Application -> Repository : saveGameInfo()
+        Repository --> Application : game container info saved
+        
+        Application --> Presentation : match found
+        Presentation --> Application : showGame()
+    end
+    
+end
+
+@enduml

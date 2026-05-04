@@ -1,0 +1,8 @@
+@startuml
+
+[*] --> LobbyCreated
+LobbyCreated -right-> WaitingPlayers
+WaitingPlayers --> LobbyFull
+LobbyFull -right-> GameStart
+
+@enduml
