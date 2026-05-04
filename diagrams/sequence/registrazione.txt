@@ -4,20 +4,21 @@ actor Client
 participant "Presentation Layer" as Presentation
 participant "Application Layer" as Application
 participant "User Repository" as Repository
+participant "Domain Layer" as Domain
 
 Client -> Presentation : register(fullName, username, email, password)
 Presentation -> Application : handleRegister(command)
 
-Application -> Application : createUser()
-
-Application -> Repository : checkUserExists(username)
-Repository --> Application : userExists / notFound
+Application -> Repository : loadUser(username)
+Repository --> Application : user / null
 
 alt Username already exists
     Application --> Presentation : error("Username already exists")
     Presentation --> Client : showError()
 else Username available
-    Application -> Repository : persistUser(user)
+    Application -> Domain : createUser()
+    Domain --> Application : userCreated
+    Application -> Repository : saveUser(user)
     Repository --> Application : repositoryFail / Success
 
     alt Repository failure

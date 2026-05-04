@@ -9,20 +9,22 @@ participant "Repository" as Repository
 Client -> Presentation : login(username, password)
 Presentation -> Application : handleLogin(command)
 
-Application -> Repository : checkUserExists(username)
-Repository --> Application : userExists / notFound
+Application -> Repository : loadUser(username)
+Repository --> Application : user / null
 
 alt User exists
-Application -> Repository : checkPassword()
-Repository --> Application : passwordCorrect / wrong
+Application -> Application : checkPassword()
     alt Authentication succesful
-        Application -> Repository : checkExistingGame(username)
-        Repository --> Application : gameExists / notFound
+        Application -> Repository : load_player_game_mapping(username)
+        Repository --> Application : game / null
             alt Game Exist
                 Application -> Repository : loadGame(gameID)
-                Repository -->  Client : playerReconnected()
+                Repository --> Application : game
+                Application -->  Presentation : playerReconnected()
+                Presentation --> Client : playerReconnected()
             else Game not found
-                Application --> Client : loginSuccess()
+                Application --> Presentation : loginSuccess()
+                Presentation --> Client : loginSuccess()
             end
     else Authentication failed
         Application --> Presentation  : error("Invalid Username/Password")

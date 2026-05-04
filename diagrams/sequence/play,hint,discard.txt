@@ -1,0 +1,43 @@
+@startuml
+actor Client
+
+participant "Presentation Layer" as Presentation
+participant "Application Layer" as Application
+participant "Repository" as Repository
+participant "Domain Layer" as Domain
+
+Client -> Presentation : playerCommand()
+Presentation -> Application : handleCommand()
+
+Application -> Repository : loadGame(gameId)
+Repository --> Application : game / null
+
+alt Game exists
+
+    alt PlayCard
+        Application -> Domain : playCard(playerId, cardIndex)
+        Domain --> Application : result
+    else DiscardCard
+        Application -> Domain : discardCard(playerId, cardIndex)
+        Domain --> Application : result
+    else GiveHint
+        Application -> Domain : giveHint(...)
+        Domain --> Application : result
+    end
+
+    Application -> Repository : saveGame(game)
+
+    Application -> Application : buildEvents(result)
+
+    Application --> Presentation : events(...)
+    Presentation -> Presentation : broadcastToPlayers()
+    Presentation --> Client : update()
+
+else Game not found
+
+    Application --> Presentation : error("Game not found")
+    Presentation --> Client : showError()
+
+end
+
+@enduml
