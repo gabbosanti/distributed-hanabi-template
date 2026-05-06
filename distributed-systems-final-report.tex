@@ -69,7 +69,7 @@ The system needs to store basic player information such as full name, unique ID,
 Once the client is connected to the server, authentication is required and if a player is not registered yet, the system should allow the user to sign up.
 Then a player can choose wheter to create a lobby to play with other players or join extisting ones.
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
-Players visualize the game shared state on their clients and, on each turn, send command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
+Players visualize the game shared state on their clients and, on each turn, send  a command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
 
 \begin{figure}[h!]
     \centering
@@ -275,11 +275,10 @@ The project is designed as a distributed system and therefore takes into account
   The system mitigates single points of failure both at storage level. 
   Since servers are stateless, no persistent game information is lost at the application level. 
   Concerning the storage layer, game state is stored in Redis, configured with master/replica replication and Sentinel monitoring, allowing automatic failover in case of primary node failure.
-  However, the load balancer itself represents a remaining infrastructural single point of failure but its replication is considered outside the scope of the project due to complexity constraints. 
   The system prioritizes consistency of the game state over continuous availability during rare infrastructural faults.
 
   \item \textbf{Scalability} : \newline
-  The system supports horizontal scalability by allowing multiple stateless server instances to operate in parallel behind a load balancer.
+  The system supports horizontal scalability by allowing deployment of multiple matchmaking services that can, under a future expansion of load, have the total load balanced between themselves with an appropriate load balancer.
   As the number of connected players increases, additional server instances can be deployed to distribute the workload. 
   Scalability is ultimately bounded by infrastructural resources such as CPU, memory, and network capacity, as well as by the performance limits of the centralized data store.
 
@@ -311,11 +310,15 @@ The project is designed as a distributed system and therefore takes into account
 The distributed system follows a three-tier, layered architecture. An intuitive representation is shown in figure \ref{layered-architecture}
 This ensures a clear separation of concern and responsabilities.
   \begin{itemize}
-    \item Presentation Tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send command to the game server. 
+    \item Presentation Tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send commands to the game server. 
     \item Logic Tier is composed by the game server. It is responsible for executing commands sent from the client in a precise format.
     \item Data Tier is composed by the database. The role is to store important data such as user and game information.
   \end{itemize}
 
+Game actions are exposed through an RPC-like command interface. 
+For example, a client sends a command such as \texttt{game.play\_card}, 
+and the backend dispatches it to the corresponding application method, 
+such as \texttt{playCard(username, cardIndex)}.  
 \begin{figure}[h!]
     \centering
     \includegraphics[width=0.5\linewidth]{figures/layered-architecture.png}
@@ -325,17 +328,15 @@ This ensures a clear separation of concern and responsabilities.
 
 In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. 
 After each update, the new state is broadcasted to all the players. 
-%\footnote{According to the popular board gaming website boardgamearena 
-%\cite{bgastudio}, C-S is the optimal choice compared to P2P for real time mass game orchestration.}
 
 \subsection{Infrastructure}\label{infrastructure}
 
-As anticipated in section \ref{architecture}, the distributed system is composed by three component :
+As anticipated in section \ref{architecture}, the distributed system is composed by three components:
   \begin{itemize}
     \item \emph{Client} process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned game server process. 
     \item \emph{Server} process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
     \item \emph{Database} that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
-    Database component is divided in :
+    Database component is divided in:
       \begin{itemize}
         \item Master is the single source of truth.
         \item Replica contains replicated copy of data. This ensures fault tolerance in case of fault tolerance of the master.
@@ -353,22 +354,22 @@ As anticipated in section \ref{architecture}, the distributed system is composed
   
 \subsection{Modelling}\label{modelling}
 
-  The game server internal architecture has been designed to have a level approach, so each component has a different responsability.
+  The game server internal architecture has been designed to have a level approach, so each component has a different responsibility.
   \begin{itemize}
-    \item Domain level contains all the game Logic and it's responsible of applying game rules and modify game state accordingly.
-    \item Application level aims at executing commands coming from the client and address the operation to the correct use case.
-    \item Presentation level directly communicate with the client and manages communications.
+    \item Domain level contains all the game Logic and is responsible of applying the game rules and modifying the game state accordingly.
+    \item Application level executes commands coming from the client and addresses the operation to the correct use case.
+    \item Presentation level directly communicates with the client and manages communications.
   \end{itemize}
 
   \subsubsection{Domain}
   The core class is Game, which mantains all the information of a started game.
-  Its responsability is to execute a player move, by applying internal game rules, and update current state.
-  Regardless the move a player can do (play card, discard, give hint), it is first checked if player turn is correct. Finally, unless a gameover situation occurs, the turn is changed to another player
+  Its responsibility is to execute a player move through applying internal game rules that update its internal state.
+  Before applying the move the player has requested (playing a card, giving a hint, discarding a card), it is first checked if the player turn is correct. After applying the move, unless a gameover situation occurs, the turn is changed to another player.
   \newline
-  Board class is a representation of board game: contains all the information of card played on the table, misfires and tokens. It has been separated from Game class to better address roles and responsabilities and facilitate testing and debug.
+  Board class is a representation of board game: contains all the information of cards played on the table, misfires and tokens. It has been separated from Game class to better address roles and responsibilities and facilitate better testing and debugging.
   \newline
-  In the domain there is a distinction between User and Player. The player is a user that joined or created a lobby and is part of a started game.
-  User just contains personal information for authenticate on the system.
+  The domain contains two record-like classes: Player and User. The player is a user that joined or created a lobby and is part of a currently running game.
+  User just contains personal information that is used for authenticating the connected client to the system.
   \newline
   (I will put class diagram here)
 
@@ -404,10 +405,10 @@ As anticipated in section \ref{architecture}, the distributed system is composed
 \subsection{Interaction}\label{interaction}
 
 Client and server interact with a request-response interaction protocol.
-The client always has the initiative in the comunication and send well-formatted commands to the server.
-It is responsible of validating the command, applying game rules and update the current game state. After that, one or multiple events are sent back to the client.
-The only case in which the server automatically send event to the client is when the current player's turn is expired. In this case the game forces to change turn to the next player.
-For each command a sequence diagram representation is shown. In the case of game command, all the three moves are in the same diagram for semplicity.
+The client always has the initiative in the comunication and sends well-formatted commands to the server.
+The server is responsible for validating the command, applying  the game rules and updating the current game state. After that, one or multiple events are sent back to the client.
+The only case in which the server automatically sends event to the client is when the current player's turn is expired. In this case the game forces a change of turn to the next player.
+For each command a sequence diagram representation is shown. In the case of a game command, all the three moves are in the same diagram for the sake of simplicity.
 
 
 \begin{figure}[h!]
@@ -493,8 +494,8 @@ State diagrams are welcome here
   % currently client polls constantly. We can impl heartbeat so that server ends the game if client on turn not responding. 
   \begin{itemize}
     \item \emph{why}? \emph{among} which components? \emph{how} does it work?
-    \item A \emph{retry} mechanism is implemented when a server is writing to its entry in the database. If the master has been changed due to a fault, the new master will have to be rediscovered before getting reached with the request properly. Rediscovery proceeds when the number of attempts to reach the database is exhausted.
-    \item A \emph{timeout} mechanism is implemented between the client and the server. If the client has not sent a user prompt for a certain amount of time, the server can announce to the matchmaker that the game is over and gracefully release all resources taken.
+    \item A \emph{retry} mechanism is implemented when a server is writing to its entry in the database. If the master has been changed due to a fault, the new master will have to be rediscovered before getting reached with the request properly. Rediscovery proceeds until the number of attempts to reach the database is exhausted.
+    \item A \emph{timeout} mechanism is implemented between the client and the server.
   \end{itemize}
   
   \item Is there any form of \textbf{error handling}?
@@ -554,8 +555,8 @@ Availability is permitted by a level of fault tolerance.
   \end{itemize}
 \end{itemize}
 
-User must authenticate with username and password. 
-Validation occurs in the server side. Moreover, an hashed password is saved in the database insted of plaintext. The cypher algorithm sha256 is used.
+Users must authenticate with their username and password. 
+Validation occurs in the server side. Moreover, a hashed password is saved in the database instead of  a plaintext one. The cypher algorithm sha256 is used for the encryption.
 
 \section{Implementation}\label{implementation}
 
@@ -563,23 +564,22 @@ Please report here all the implementation (technology-dependent) choices you mad
 
 \begin{itemize}
   \item which \textbf{network protocols} to use?
-    To guarantee reliable message delivery, TCP is used. Connections between clients and servers and servers and the matchmaker are carefully managed in the application logic.
+    To guarantee reliable message delivery, TCP is used. Connections between clients and servers and servers and the matchmaking service are carefully managed in the application logic.
     On top of that, WebSocket communication has been used as an application layer protocol. This ensure fast, reliable and bi-directional comunication, which makes it the best choice for real time gaming.  
   
   \item how should \emph{in-transit data} be \textbf{represented}?
   \begin{itemize}
-    \item In-transit data are exchanged between backend and frontend. As a common understanding language, JSON format has been chosen for his semplicityis in general Python dictionaries serialized as JSON objects.
+    \item In-transit data is exchanged between the backend and the local frontend. As a common understanding language, JSON format has been chosen for its simplicity, in general messages as Python dictionaries are serialized into JSON objects.
     At the receiving end, the inverse decoding is implemented, both using the json python package.
   \end{itemize}
   
   \item how should \emph{databases} be \textbf{queried}?
   \begin{itemize}
-    \item The Redis game database is queried per the game id. 
+    \item The Redis game database is queried for the appropriate game for a spawned game server using a unique game identifier.
   \end{itemize}
   
   \item how should components be \emph{authenticated}?
   \begin{itemize}
-    \item OAuth perhaps. I am not familiar with this. 
   \end{itemize}
 
 \end{itemize}
@@ -594,90 +594,168 @@ The server frontend part has been realized using React, Vite and Typescript.
 \begin{itemize}
   \item any particular \emph{framework} / \emph{technology} being exploited goes here
 \end{itemize}
-
 \section{Validation}\label{validation}
-The application logic was tested out separately from the communication protocol implemented. End-to-end testing was done to ensure the complete system meets the specification. 
+
+The system was validated at different levels. First, the application logic was tested separately from the communication protocol, so that the correctness of the game rules and matchmaking logic could be checked independently. Afterwards, integration and end-to-end tests were used to verify that the complete distributed system behaves according to the specification.
+
 \subsection{Automatic Testing}\label{automatic-testing}
 
-\begin{itemize}
-  \item how were individual components \textbf{\emph{unit}-test}ed?
-  The client and server nodes were tested in regards to all possible communication possibilities - connect, send, receive, timeout. The GameState object was unit tested in regards to the functioning of all the RPC's that can be called upon the object. 
-  \item how was communication, interaction, and/or integration among components tested?
-  Unit tests were done for the matchmaker to see if it properly instantiates and destroys matches. 
-  Multiple server instances working concurrently were spawned to test out the system in a simulated production environment. 
-  \item how to \textbf{\emph{end-to-end}-test} the system?
-  %
-  \begin{itemize}
-    \item e.g.~production vs.~test environment
-  \end{itemize}
+\subsubsection{Unit Testing}
 
-  \item for each test specify:
-  % dont know if going into this much detail makes sense at the moment 
-  \begin{itemize}
-    \item rationale of individual tests
-    \item how were the test automated
-    \item how to run them
-    \item which requirement they are testing, if any
-  \end{itemize}
-\end{itemize}
+Individual components were unit-tested in isolation. The game domain logic was tested through the \texttt{Game} object, focusing on the game actions that can be invoked through the RPC-like command interface. These tests check whether actions such as playing, discarding, drawing cards, and enforcing player turns behave correctly.
 
-\begin{quote}
-recall that \emph{deployment} \textbf{automation} is commonly used to \emph{test} the system in \emph{production-like} environment
-% we can try automated deployment if aynone knows how to do it 
-\end{quote}
+The matchmaking service was also unit-tested separately. These tests verify that lobbies are created correctly, players can join lobbies, active games are tracked, and finished or failed game containers are cleaned up to free resources.
 
-\begin{quote}
-recall to test corner cases (crashes, errors, etc.)
-\end{quote}
+The client-matchmaking communication channel was tested with respect to the main communication cases: connecting, sending messages, receiving responses, and handling timeouts. This ensures that the protocol behaves correctly even when clients do not respond immediately or when communication fails.
 
-\subsection{Acceptance test}\label{acceptance-test}
+\subsubsection{Integration Testing}
+
+Integration testing was used to verify the interaction between components. In particular, the matchmaking service was tested together with the game server management logic to ensure that a game container is created when enough players join a lobby.
+
+The tests also check whether the system keeps the correct account of active games and whether dead or stopped containers are removed from the active game list. This is important because the system dynamically creates game server instances, so incorrect cleanup could lead to stale state or wasted memory.
+
+Multiple server instances were also spawned concurrently in order to simulate a more production-like environment. This was used to check whether the system can support several active games at the same time.
+
+\subsubsection{End-to-End Testing}
+
+End-to-end testing was performed by running the system through Docker Compose in a production-like environment. This includes the backend server, Redis master, Redis replica, Redis Sentinel, and dynamically created game server containers.
+
+The goal of these tests was to verify the complete flow from the client perspective:
 
 \begin{itemize}
-  \item did you perform any \emph{manual} testing?
-  %
-  \begin{itemize}
-    \item what did you test?
-    \item why wasn't it automatic? To check response times of server in real time under different real loads on the system. 
-  \end{itemize}
+    \item a client connects to the backend;
+    \item a player creates or joins a lobby;
+    \item the matchmaking service detects when enough players are present;
+    \item a new game server container is created;
+    \item clients connect to the game server;
+    \item players exchange game actions through the WebSocket protocol;
+    \item game state updates are propagated to the connected players.
 \end{itemize}
 
+This type of testing is necessary because some behavior cannot be fully validated with unit tests only. For example, container creation, WebSocket communication, Redis persistence, and Sentinel failover require multiple components to run together.
+
+\subsubsection{Running the Tests}
+
+The automatic tests can be executed from the backend directory using:
+
+\begin{verbatim}
+pytest
+\end{verbatim}
+
+or, for a specific test file:
+
+\begin{verbatim}
+pytest tests/<test_file>.py
+\end{verbatim}
+
+The rationale behind the tests is to check both normal behavior and corner cases, such as wrong turns, failed containers, timeouts, disconnected clients, and Redis failover. These tests are linked to the system requirements related to matchmaking correctness, game state consistency, fault tolerance, and automatic deployment.
+
+\subsection{Acceptance Test}\label{acceptance-test}
+
+Manual acceptance testing was also performed. The system was started in a production-like Docker environment and multiple clients were launched in separate terminals. This allowed the complete game flow to be tested from the user's perspective.
+
+The manual tests included:
+
+\begin{itemize}
+    \item starting the complete system using Docker Compose;
+    \item connecting multiple clients;
+    \item creating and joining lobbies;
+    \item starting a game after matchmaking succeeds;
+    \item performing game actions from different players;
+    \item checking whether game state updates are received by all connected clients;
+    \item observing the behavior of the system under multiple active connections;
+    \item testing Redis Sentinel failover by stopping the Redis master and checking whether the replica is promoted.
+\end{itemize}
+
+These tests were in general performed manually because they involve real-time behavior that is difficult to fully capture with automated tests, such as perceived response time, WebSocket message propagation, and the user-visible behavior of multiple clients interacting with the same game.
 \section{Deployment}\label{deployment}
 
-\begin{itemize}
-  \item should one install your software from scratch, how to do it?
-  %
-  Docker and docker compose need to be installed. 
-  Requirements.txt file stores the python dependencies that can simply be installed with the command pip install -r command. The .yml file spawns a server instance with multiple replicas and a sentinel instance that does failover.
-  docker compose up --build 
-  command instantiates the containers as specified in the yml file. 
-  \begin{itemize}
-    \item provide instructions
-    \item provide expected outcomes
-  \end{itemize}
+The system is deployed using Docker and Docker Compose. This makes it possible to start the backend, Redis infrastructure, and supporting services in a reproducible environment.
 
-  \item what software should be installed on the machines to run your project? which versions?
-  
-  \item should one set environment variables or configuration files?
-  Configuration files for the redis master, replica and sentinel are already set up in each game instance so that failover works as intended. 
-  \item if you're using containerization (e.g.~Docker), 
-  describe how you engineered your deployment scrips (e.g. \texttt{docker-compose.yml} files)
+\subsection{Requirements}
+
+To run the project from scratch, the following software should be installed:
+
+\begin{itemize}
+    \item Docker;
+    \item Docker Compose;
+    \item Python 3;
+    \item the Python dependencies listed in \texttt{requirements.txt}.
 \end{itemize}
+
+The Python dependencies can be installed with:
+
+\begin{verbatim}
+pip install -r requirements.txt
+\end{verbatim}
+
+\subsection{Starting the System}
+
+The system can be started using:
+
+\begin{verbatim}
+docker compose up --build
+\end{verbatim}
+
+If the Docker Compose file is located in a subdirectory, the command can be run with the explicit file path, for example:
+
+\begin{verbatim}
+docker compose -f web/backend/docker-compose.yml up --build
+\end{verbatim}
+
+This command builds the required images and starts the containers defined in the Docker Compose file.
+
+\subsection{Expected Outcome}
+
+After the deployment command is executed, the following components are expected to be running:
+
+\begin{itemize}
+    \item the main backend server;
+    \item a Redis master instance;
+    \item a Redis replica instance;
+    \item a Redis Sentinel instance;
+    \item dynamically created game server containers when matches are found.
+\end{itemize}
+
+Redis configuration files for the master, replica, and Sentinel are included in the project. These configuration files allow Sentinel to monitor the Redis master and promote the replica if the master becomes unavailable.
+
+\subsection{Deployment Design}
+
+The deployment was engineered using containerization so that the system can be started in a production-like environment with a single command. Docker Compose defines the required services, their network configuration, and the Redis failover setup.
+
+The backend connects to Redis through Sentinel, instead of depending only on a fixed Redis master. This allows the backend to discover the current Redis master after a failover. The game server manager can then dynamically create separate game containers when the matchmaking service starts a new game.
+
 
 \section{User Guide}\label{user-guide}
 
+To use the system, the user first starts the backend infrastructure using Docker Compose:
+
+\begin{verbatim}
+docker compose up --build
+\end{verbatim}
+
+After the system has started successfully, clients can be launched in separate terminals. For example:
+
+\begin{verbatim}
+python client.py
+\end{verbatim}
+
+Each client connects to the backend server and can perform actions such as logging in, creating a lobby, joining a lobby, and playing a game once matchmaking succeeds.
+
+The expected usage flow is:
+
 \begin{itemize}
-  \item how to use your software?
-  %
-  \begin{itemize}
-    \item provide instructions
-    docker compose up --build
-    python client.py in separate terminals for any number of clients 
-    \item provide expected outcomes
-    spawn a server with the replicas. 
-    \item provide screenshots if possible - have some old ones can make new 
-  \end{itemize}
+    \item start the system with Docker Compose;
+    \item open one terminal for each client;
+    \item run \texttt{python client.py} in each client terminal;
+    \item create a lobby with one client;
+    \item join the lobby with another client;
+    \item wait for the matchmaking service to create a game server;
+    \item connect to the game server;
+    \item play the game by sending game actions.
 \end{itemize}
 
+The expected outcome is that the backend starts successfully, Redis replication and Sentinel are active, and a new game server container is spawned when enough players join the same lobby. Screenshots of the running containers, client terminals, and game interaction can be included to demonstrate the complete workflow.
 \section{Self-evaluation}\label{self-evaluation}
 
 \begin{itemize}
