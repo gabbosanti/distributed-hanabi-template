@@ -1,0 +1,105 @@
+@startuml
+
+interface IHandler{
+    + excecute(msg:str) : void
+}
+
+class PlayCardHandler{
+ - IGameRepository : repo
+ + excecute(PlayCardCommand : command) : list[Event]
+}
+
+class DiscardCardHandler{
+ - IGameRepository : repo
+  + excecute(DiscardCardCommand : command) : list[Event]
+}
+
+
+class GiveHintHandler{
+ - IGameRepository : repo
+  + excecute(GiveHintCommand : command) : list[Event]
+}
+
+class CreateLobbyHandler{
+ - MatchmakingService : matchmaking_service
+  + excecute(CreateLobbyCommand : command) : list[Event]
+}
+
+class JoinLobbyHandler{
+ - MatchmakingService : matchmaking_service
+ + excecute(JoinLobbyCommand : command) : list[Event]
+}
+
+class RegisterHandler{
+ - IUserRepository : repo
+  + excecute(RegisterCommand : command) : list[Event]
+}
+
+class LoginHandler{
+ - IUserRepository : repo
+  + excecute(LoginCommand : command) : list[Event]
+
+}
+
+PlayCardHandler -up-> IHandler
+DiscardCardHandler -up-> IHandler
+GiveHintHandler -up-> IHandler
+JoinLobbyHandler -down-> IHandler
+LoginHandler -down-> IHandler
+RegisterHandler -left-> IHandler
+CreateLobbyHandler -right-> IHandler
+
+class PlayCardCommand {
+    - game_id : str
+    - player_id : str
+    - card_index : int
+}
+
+class DiscardCardCommand {
+    - game_id : str
+    - player_id : str
+    - card_index : int
+}
+
+class GiveHintCommand {
+    - game_id : str
+    - from_player : str
+    - to_player : str
+    - color : Color | None
+    - number : Number | None
+}
+
+class RegisterCommand {
+    - full_name : str
+    - email : str
+    - username : str
+    - password : str
+}
+
+class LoginCommand {
+    - username : str
+    - password : str
+}
+
+class CreateLobbyCommand{
+    - lobby_id : str
+    - max_users : str
+    - user_creator : str
+}
+
+class JoinLobbyCommand{
+    - lobby_id : str
+    - user_joined : str
+}
+
+PlayCardCommand -up-> PlayCardHandler
+DiscardCardCommand -up-> DiscardCardHandler
+GiveHintCommand -up-> GiveHintHandler
+
+RegisterCommand -left-> RegisterHandler
+LoginCommand -right-> LoginHandler
+
+CreateLobbyCommand -right-> CreateLobbyHandler
+JoinLobbyCommand -left-> JoinLobbyHandler
+
+@enduml

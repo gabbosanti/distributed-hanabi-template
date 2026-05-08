@@ -1,0 +1,19 @@
+@startuml
+interface IUserRepository{
+ + load_user(username : str) : User
+ + save_user(user : User) : void
+}
+
+interface IGameRepository{
+ + load_game(game_id : str) : Game
+ + save_user(game : Game) : void
+}
+
+class MatchmakingRepository{
+
+}
+
+class RedisRepository {
+
+}
+@enduml

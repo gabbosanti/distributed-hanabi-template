@@ -66,7 +66,7 @@ class Player {
 }
 
 class Game {
-  - gameID: String
+  - gameID: str
   - board: Board
   - players : list[Player]
   - playerTurn : str
@@ -78,6 +78,7 @@ class Game {
   + canPlay(username : str, board : Board | None)
   + changeTurn() : void
   + checkGameOver() : int | None
+  + isTurnExpired() : bool
 }
 
 ' --- Relazioni ---
@@ -87,24 +88,24 @@ Card --> Number
 Card --> Colour
 
 ' Relazione HandCard -> Card
-HandCard -up-> Card
+HandCard --> Card
 
 ' Relazione Board -> Deck
-Board -left-> Deck
+Board --> Deck
 
 ' Relazione Deck -> Card (con molteplicità)
-Deck "50" -right- "1" Card
+Deck "50" -- "1" Card
 
 ' Relazione Board -> Card (discards)
-Board -down-> Card
+Board --> Card
 
 ' Relazione Game -> Board
-Game -up-> Board
+Game --> Board
 
 ' Relazione Game -> Player (con molteplicità 2..5)
-Game "1" -down-> "2..5" Player
+Game "1" --> "2..5" Player
 
 ' Relazione Player -> HandCard
-Player -left-> HandCard
+Player --> HandCard
 
 @enduml
