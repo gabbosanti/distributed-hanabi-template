@@ -1,19 +1,37 @@
 @startuml
 interface IUserRepository{
- + load_user(username : str) : User
- + save_user(user : User) : void
+    + load_user(username : str) : User
+    + save_user(user : User) : void
 }
 
 interface IGameRepository{
- + load_game(game_id : str) : Game
- + save_user(game : Game) : void
+    + load_game(game_id : str) : Game
+    + save_user(game : Game) : void
 }
 
-class MatchmakingRepository{
-
+class MatchmakingService{
+    - waiting_players : list[str]
+    - lobbies : dict[str, dict]
+    - repo : RedisRepository
+    - game_server_manager : GameServerManager
+    + create_lobby(lobby_id: str, max_users: int, user_creator : str) -> str
+    + join_lobby(lobby_id: str, player : WaitingPlayer)
+    + add_player_to_pool(player: WaitingPlayer, lobby_id: str) -> str
+    + create_game(lobby_players, game_id) : GameInformation
 }
 
 class RedisRepository {
-
+    + _retry() : void
+    + save_game_information(game_info : GameInformation) : void
+    + load_game_information(game_id : str) : GameInformation
+    + save_player_game_mapping(player_id: str, game_id: str): void
+    + get_player_game_mapping(self, player_id: str) : str | None
 }
+
+RedisRepository -up-> IUserRepository
+RedisRepository -up-> IGameRepository
+
+MatchmakingService -left-> RedisRepository
+
+
 @enduml

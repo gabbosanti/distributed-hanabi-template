@@ -1,7 +1,6 @@
 @startuml
-
 interface IHandler{
-    + excecute(msg:str) : void
+    + excecute(command) : void
 }
 
 class PlayCardHandler{
@@ -13,7 +12,6 @@ class DiscardCardHandler{
  - IGameRepository : repo
   + excecute(DiscardCardCommand : command) : list[Event]
 }
-
 
 class GiveHintHandler{
  - IGameRepository : repo
@@ -38,16 +36,17 @@ class RegisterHandler{
 class LoginHandler{
  - IUserRepository : repo
   + excecute(LoginCommand : command) : list[Event]
-
 }
 
 PlayCardHandler -up-> IHandler
 DiscardCardHandler -up-> IHandler
 GiveHintHandler -up-> IHandler
-JoinLobbyHandler -down-> IHandler
-LoginHandler -down-> IHandler
+
 RegisterHandler -left-> IHandler
-CreateLobbyHandler -right-> IHandler
+CreateLobbyHandler -down-> IHandler
+
+LoginHandler -down-> IHandler
+JoinLobbyHandler -right-> IHandler
 
 class PlayCardCommand {
     - game_id : str
@@ -97,9 +96,9 @@ DiscardCardCommand -up-> DiscardCardHandler
 GiveHintCommand -up-> GiveHintHandler
 
 RegisterCommand -left-> RegisterHandler
-LoginCommand -right-> LoginHandler
+LoginCommand -down-> LoginHandler
 
-CreateLobbyCommand -right-> CreateLobbyHandler
-JoinLobbyCommand -left-> JoinLobbyHandler
+CreateLobbyCommand -down-> CreateLobbyHandler
+JoinLobbyCommand -right-> JoinLobbyHandler
 
 @enduml
