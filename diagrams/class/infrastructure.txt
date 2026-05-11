@@ -6,7 +6,7 @@ interface IUserRepository{
 
 interface IGameRepository{
     + load_game(game_id : str) : Game
-    + save_user(game : Game) : void
+    + save_game(game : Game) : void
 }
 
 class MatchmakingService{
@@ -28,10 +28,17 @@ class RedisRepository {
     + get_player_game_mapping(self, player_id: str) : str | None
 }
 
+class GameServerManager {
+    
+    + spawn_server_container(game_id : str, player_names : str) : void
+    + cleanup_leftover_games() : void
+}
+
 RedisRepository -up-> IUserRepository
 RedisRepository -up-> IGameRepository
 
 MatchmakingService -left-> RedisRepository
 
+GameServerManager -down-> MatchmakingService
 
 @enduml

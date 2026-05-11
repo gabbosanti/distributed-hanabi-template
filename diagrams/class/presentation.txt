@@ -1,0 +1,76 @@
+class CommandMessage {
+    -type: str
+    -action: str
+    -data: dict[str, Any]
+    -request_id: Optional[str] = None
+    -connection_id: Optional[str] = None
+}
+
+class Event {
+    - event : str
+    - data : dict[str, Any]
+}
+
+
+class CommandFactory {
+    + create (message : CommandMessage) : void
+}
+
+class CommandDispatcher {
+    - command_handlers : dict[type, IHandler]
+    
+    + dispatch(command) : list[Event]
+}
+
+class WebSocketHandler {
+
+- connectionManager : ConnectionManager
+- dispatcher : CommandDispatcher
+- command_factory : CommandFactory
+
++ deserialize(raw_text :str) : CommandMessage
++ serialize (message : CommandMessage) : str
+
++ on_connect(websocket) : void
++ on_disconnect(conn_id : str) : void
+
++ on_message(conn_id : str, raw_text : str) : void
++ _handle_command(message : CommandMessage) : list[Event]
++ broadcast(conn_id: str, events: list[Event]) : void
+
++ main(websocket) : void
+
+}
+
+
+class ConnectionManager {
+
+- player_connections : dict[player_id, conn_id]
+- game_connections : dict[game_id, set[conn_id]]
+- conn_players : dict[conn_id, player_id]
+
++ add_connection(websocket)
++ remove_connection(conn_id)
+
++ bind_player(conn_id, player_id)
++ unbind_player(player_id)
+
++ join_game(player_id, game_id)
++ leave_game(player_id, game_id)
+
++ get_connection(player_id) : websocket
+
+}
+
+WebSocketHandler --> ConnectionManager
+WebSocketHandler --> CommandDispatcher
+WebSocketHandler --> CommandFactory
+
+
+WebSocketHandler -left-> CommandMessage
+CommandFactory -up-> CommandMessage
+
+
+WebSocketHandler --> Event
+CommandDispatcher --> Event
+

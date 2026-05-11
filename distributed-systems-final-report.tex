@@ -32,23 +32,13 @@
 \begin{abstract}
 Hanabi is a cooperative multiplayer card game for 2-5 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=0.5\linewidth]{figures/hanabi.jpg}
+\end{figure}
+
 \section{Concept}\label{concept}
-
-Here you should explain:
-
-  \begin{itemize}
-    \item \emph{what} is the software doing?
-    \item \emph{where} are the users?
-    \item \emph{when} and \emph{how frequently} do they interact with the system?
-    \item \emph{how} do they \emph{interact} with the system? which \emph{devices} are they using?
-  
-    \item does the system need to \emph{store} user's \textbf{data}? 
-    \emph{which}? \emph{where}?
-    \item most likely, there will be \emph{multiple} \textbf{roles}
-    
-  \end{itemize}
-
-\subsection{Context}
 
 The software implements the game Hanabi, a 2-5 player cooperative board game where players attempt to build the greatest "pyrotechnic show", by ordering each other's cards.
 Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white).
@@ -81,17 +71,6 @@ Players visualize the game shared state on their clients and, on each turn, send
 \newpage
 \subsection{Reasons for distribution}
 
-{\scriptsize Why is distribution needed?
-  %text guideline
-  \begin{itemize}
-    \item geographically distributed environments?
-    \item computation speedup?
-    \item resource sharing?
-    \item fault tolerance?
-    \item other reasons?
-  \end{itemize}
-}
-
 The distributed nature of the system is inherent to the problem domain. 
 The game is designed to be played by multiple users connecting from different machines, potentially located in geographically separated environments.
 Therefore, a centralized single-machine solution would not satisfy the project requirements.
@@ -114,42 +93,6 @@ From a systems perspective, distribution is required for several reasons:
 \end{itemize}
 
 \section{Requirements Elicitation and Analysis}\label{requirements}
-
-{\scriptsize %%text guideline
-\begin{itemize}
-  \item The requirements must explain \textbf{what} (not how) the software
-  being produced should do.
-  %
-  \begin{itemize}
-    \item you should not focus on the particular problems, but exclusively on
-    what you want the application to do.
-  \end{itemize}
-
-  \item Requirements must be clearly identified, and possibly numbered
-
-  \item Requirements are divided into:
-  %
-  \begin{itemize}
-    \item \textbf{Functional}: some functionality the software should provide to the user
-    \item \textbf{Non-functional}: requirements that do not directly concern behavioural aspects, such as consistency, availability, etc.
-    \item \textbf{Implementation}: constrain the entire phase of system realization, 
-    for instance by requiring the use of a specific programming language and/or a specific software tool
-    %
-    \begin{itemize}
-      \item these constraints should be adequately justified by political / economic / administrative reasons\ldots{}
-      \item \ldots{} otherwise, implementation choices should emerge \emph{as  a consequence of} design
-    \end{itemize}
-  \end{itemize}
-
-  \item If there are domain-specific terms, these should be explained in a glossary
-  
-  \item Each requirement must have its own \textbf{acceptance criterion}
-  %
-  \begin{itemize}
-    \item these will be important for the validation phase
-  \end{itemize}
-\end{itemize}
-}
 
 This section defines the requirements for transforming the Hanabi implementation into a distributed systems project with explicit correctness, resilience, and evaluation goals.
 The focus is not only game functionality, but also distributed coordination, consistency, and failure handling.
@@ -359,9 +302,7 @@ As anticipated in section \ref{architecture}, the distributed system is composed
     \item Presentation level directly communicates with the client and manages communications.
   \end{itemize}
   Game actions are exposed through an RPC-like command interface. 
-  For example, a client sends a command such as \texttt{game.play\_card}, 
-  and the backend dispatches it to the corresponding application method, 
-  such as \texttt{playCard(username, cardIndex)}.
+  For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method,such as \texttt{playCard(username, cardIndex)}.
   \subsubsection{Domain}
   \begin{figure}[H]
     \centering
@@ -405,6 +346,32 @@ As anticipated in section \ref{architecture}, the distributed system is composed
 
   \subsubsection{Presentation}
 
+  \begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/presentation.png}
+    \label{presentation-class}
+    \caption{UML presentation class}
+  \end{figure}
+
+  Presentation layer is responsible for handling real-time communication and the translation of network messages into executable application logic. 
+  The design follows the Factory and Dispatcher patterns to ensure a clean separation between the transport layer (WebSockets) and the business logic.
+  Core Components are CommandMessage e Event dataclasses.
+  CommandMessage acts as a generic Data Transfer Object (DTO) that captures incoming raw data, including the action type and its payload.
+  Event represents the system's reactive output, encapsulating the state changes that need to be communicated back to the clients.
+  WebSocketHandler is the central entry point for the real-time communication layer : it orchestrates the lifecycle of a connection (connect, message, disconnect) and it is responsible for:
+  \begin{itemize}
+    \item Serialization/Deserialization: Converting raw socket strings into structured CommandMessage objects.
+    \item Orchestration: Coordinating with the Factory to create commands and the Dispatcher to execute them.
+    \item Broadcasting: Sending generated Events back to the appropriate clients.
+  \end{itemize}
+
+  CommandFactory acts as a creational layer that parses the CommandMessage and instantiates the specific Command object required by the application, while CommandDispatcher maintains a registry of handlers.
+  It receives the instantiated command and routes it to the correct IHandler, returning a list of resulting Events. 
+  Finally, ConnectionManager is as pecialized component that manages the state of active network connections. It maintains bidirectional mappings between:
+
+  \subsection{Events and commands}
+
+
   \begin{itemize}
     \item how do \emph{domain entities} \textbf{map to} \emph{infrastructural components}?
     %
@@ -432,7 +399,6 @@ As anticipated in section \ref{architecture}, the distributed system is composed
     \end{itemize}
   \end{itemize}
 
-
 \subsection{Interaction}\label{interaction}
 
 The client and the server interact with a request-response interaction protocol.
@@ -441,22 +407,42 @@ The server is responsible for validating the command, applying the game rules an
 The only case in which the server sends events to the client unprompted is when the current player's turn is expired. In this case the game forces a change of turn to the next player.
 For each command a sequence diagram representation is shown. In the case of a game command, all the three moves are in the same diagram for the sake of simplicity.
 
+\begin{itemize}
+  \item Registration sequence diagram is shown at figure \ref{registration-sequence-diagram}
+  \item Login sequence diagram is shown at figure \ref{login-sequence-diagram}
+  \item Game sequence diagram is shown at figure \ref{game-sequence-diagram}
+  \item Lobby creation and joining sequence diagram is shown at figure \ref{lobby-sequence-diagram}
+\end{itemize}
+
+
 \begin{figure}[h]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/registration-sequence-diagram.png}
     \caption{User registration sequence diagram}
+    \label{registration-sequence-diagram}
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/login-sequence-diagram.png}
     \caption{User login sequence diagram}
+    \label{login-sequence-diagram}
+
 \end{figure}
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/player-game-move-sequence-diagram.png}
     \caption{User game move sequence diagram}
+    \label{game-sequence-diagram}
+
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/create-join-lobby.png}
+    \caption{User create/join lobby sequence diagram}
+    \label{lobby-sequence-diagram}
 \end{figure}
 
 \subsection{Behaviour}\label{behaviour}
@@ -469,6 +455,17 @@ For each command a sequence diagram representation is shown. In the case of a ga
 
   \item which components are in charge of updating the \textbf{state} of the system? \emph{when}? \emph{how}?
 \end{itemize}
+The game server is meant to be a stateless component. The information about each game are stored at the Data tier.
+That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/game-lifecycle.png}
+    \caption{User create/join lobby sequence diagram}
+\end{figure}
+
+
+
 
 \begin{quote}
 State diagrams are welcome here
