@@ -62,9 +62,9 @@ Then a player can choose wheter to create a lobby to play with other players or 
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
 Players visualize the game shared state on their clients and, on each turn, send  a command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/use-case-diagram.png}
+    \includegraphics[width=1.0\linewidth]{figures/use-case-diagram.png}
     \caption{Use case diagram of the system}
 \end{figure}
 
@@ -303,6 +303,9 @@ As anticipated in section \ref{architecture}, the distributed system is composed
   \end{itemize}
   Game actions are exposed through an RPC-like command interface. 
   For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method,such as \texttt{playCard(username, cardIndex)}.
+  The following subsections contains UML class diagram for each level architecture. Not all class, methods and property have been represented, in order to focus more on the overall behaviour of the system.
+  The full code source base can be found on the repo :
+
   \subsubsection{Domain}
   \begin{figure}[H]
     \centering
@@ -449,33 +452,28 @@ For each command a sequence diagram representation is shown. In the case of a ga
 
 \begin{itemize}
   \item how does \emph{each} component \textbf{behave} individually (e.g.~in \emph{response} to \emph{events} or messages)?
-  \begin{itemize}
-    \item some components may be \emph{stateful}, others \emph{stateless}
-  \end{itemize}
-
+  \item some components may be \emph{stateful}, others \emph{stateless}
   \item which components are in charge of updating the \textbf{state} of the system? \emph{when}? \emph{how}?
 \end{itemize}
 The game server is meant to be a stateless component. The information about each game are stored at the Data tier.
 That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
+Once the game is created, the game server is in charge of waiting for commands from the client side and validating the move. 
+If a move if valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
+The overall situation is showed in figure \ref{game-lifecycle-state}.
 
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/game-lifecycle.png}
-    \caption{User create/join lobby sequence diagram}
+    \caption{Game lifecycle state diagram}
+    \label{game-lifecycle-state}
 \end{figure}
-
-
-
-
-\begin{quote}
-State diagrams are welcome here
-\end{quote}
 
 \subsection{Data and Consistency Issues}\label{data-and-consistency-issues}
 
 \begin{itemize}
   \item Is there any data that needs to be stored?
-  % need to add persistent database of player ids to code for matchmaking
+  Two types of data needs to be stored.
+  
   \begin{itemize}
     \item \emph{what} data? \emph{where}? \emph{why}?
   \end{itemize}
@@ -489,7 +487,7 @@ State diagrams are welcome here
   \end{itemize}
   
   \item Which components perform queries on the database?
-  %
+
   The servers perform read and write queries for their own game.
   \begin{itemize}
     \item \emph{when}? \emph{which} queries? \emph{why}?
@@ -505,7 +503,8 @@ State diagrams are welcome here
 \end{itemize}
 The database layer is divided into two repositories: one responsible for user data and one responsible for game data. 
 Both repositories rely on Redis key-value storage, where data is accessed through hash-table-based structures. 
-This allows common operations such as insertion, lookup, and deletion to be performed in constant average time.\subsection{Fault-Tolerance}\label{fault-tolerance}
+This allows common operations such as insertion, lookup, and deletion to be performed in constant average time.
+\subsection{Fault-Tolerance}\label{fault-tolerance}
 \begin{itemize}
 
   \item Is there any form of data \textbf{replication} / federation / sharing?
@@ -621,8 +620,6 @@ The system is designed to remain operational when individual components fail, al
 \end{itemize}
 
 \section{Implementation}\label{implementation}
-
-Please report here all the implementation (technology-dependent) choices you made while implementing your design.
 
 \begin{itemize}
   \item which \textbf{network protocols} to use?
