@@ -219,7 +219,7 @@ The project is designed as a distributed system and therefore takes into account
   At the application layer, the servers are stateless, meaning that no persistent game information is tied to a specific server instance. This means that in case of a container problem reported to the matchmaking service, the faulty container could be replaced seamlessly.
   At the storage layer, game state is persisted in Redis, which is configured with master-replica replication and monitored by Redis Sentinel. 
   If the primary Redis node fails, Sentinel can automatically promote a replica and redirect the system to the new master. 
-  During rare infrastructure-level failures, the system prioritizes preserving a consistent game state over maintaining uninterrupted availability.
+  During infrastructure-level failures, the system prioritizes preserving a consistent game state over maintaining uninterrupted availability.
 
   \item \textbf{Scalability} : \newline
   The system supports horizontal scalability by allowing deployment of multiple matchmaking services that can, under a future expansion of load, have the total load balanced between themselves with an appropriate load balancer.
@@ -229,7 +229,7 @@ The project is designed as a distributed system and therefore takes into account
   \item \textbf{Security and Trust} : \newline
   The architecture allows for future integration of user authentication mechanisms. 
   Authentication ensures that a user is correctly associated with their identity and prevents impersonation. 
-  Secure password storage (e.g., hashing and salting) can be incorporated if persistent user accounts are introduced. 
+  Secure password storage (hashing and salting) can be incorporated if persistent user accounts are introduced. 
   Communication security (e.g., TLS) can be added to protect data in transit.
 
   \item \textbf{Resource Sharing and Consistency} : \newline
@@ -251,14 +251,13 @@ The project is designed as a distributed system and therefore takes into account
 
 \subsection{Architecture}\label{architecture}
 
-The distributed system follows a three-tier, layered architecture. An intuitive representation is shown in figure \ref{layered-architecture}
-This ensures a clear separation of concern and responsabilities.
+The distributed system follows a three-tier, layered architecture. An intuitive representation is shown in figure \ref{layered-architecture}.
+This approach ensures a clear separation of concern and responsabilities.
   \begin{itemize}
-    \item Presentation Tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send commands to the game server. 
-    \item Logic Tier is composed by the game server. It is responsible for executing commands sent from the client in a precise format.
-    \item Data Tier is composed by the database. The role is to store important data such as user and game information.
+    \item Presentation tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send commands to the game server. 
+    \item Logic tier is composed by the game server. It is responsible for executing commands sent from the client in a precise format.
+    \item Data tier is composed by the database. The role is to store important data such as user and game information.
   \end{itemize}
-
   
 \begin{figure}[h!]
     \centering
@@ -270,13 +269,15 @@ This ensures a clear separation of concern and responsabilities.
 In order to manage the state consistently, the server process singularly takes up the requests of the client processes and executes each update of the state. 
 After each update, the new state is broadcasted to all the players. 
 
+\newpage
+
 \subsection{Infrastructure}\label{infrastructure}
 
 As anticipated in section \ref{architecture}, the distributed system is composed by three components:
   \begin{itemize}
-    \item \emph{Client} process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned game server process. 
-    \item \emph{Server} process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
-    \item \emph{Database} that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
+    \item Client process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned game server process. 
+    \item Server process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
+    \item Database that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
     Database component is divided in:
       \begin{itemize}
         \item Master is the single source of truth.
@@ -322,12 +323,12 @@ As anticipated in section \ref{architecture}, the distributed system is composed
   \subsubsection{Application}
   \begin{figure}[H]
     \centering
-    \includegraphics[width=1.0\linewidth]{figures/application.png}
-    \label{application-class}
+    \includegraphics[width=0.8\linewidth]{figures/application.png}
+    \label{application-class-diagram}
     \caption{UML application class}
   \end{figure}
 
-  The class diagram at figure \ref{application-class} shows how commands are managed within the system. Each command is a use case of the system, so an action the user can do.
+  The class diagram at figure \ref{application-class-diagram} shows how commands are managed within the system. Each command is a use case of the system, so an action the user can do.
   This structure promotes decoupling between the definition of the action and its execution logic, facilitating maintainability and extensibility.
   The IHandler interface defines the standard contract for all business logic handlers.
   Every handler class implements an execute() method that receives a command and returns a list of events generated by the operation.
@@ -336,7 +337,7 @@ As anticipated in section \ref{architecture}, the distributed system is composed
   \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/infrastructure.png}
-    \label{application-class}
+    \label{infrastructure-class-diagram}
     \caption{UML application class}
   \end{figure}
   Each handler class is responsible for a single unit of application logic and interact with a respective repositories (such as IGameRepository or IUserRepository) or external services (MatchmakingService) to persist state changes or query the database.
@@ -370,34 +371,15 @@ As anticipated in section \ref{architecture}, the distributed system is composed
   Finally, ConnectionManager is as pecialized component that manages the state of active network connections. It maintains bidirectional mappings between:
 
   \subsection{Events and commands}
-
-
-  \begin{itemize}
-    \item how do \emph{domain entities} \textbf{map to} \emph{infrastructural components}?
-    %
-    \begin{itemize}
-      \item e.g.~state of a video game on central server, while inputs/representations on clients
-      \item e.g.~where to store messages in an IM app? for how long?
-    \end{itemize}
-
-    \item which \textbf{domain events} are there?
-    %
-    \begin{itemize}
-      \item e.g.~\emph{user registered}, \emph{product added to cart}, \emph{order placed}, \emph{etc.}
-    \end{itemize}
     
-    \item which sorts of \textbf{messages} are exchanged?
-    %
+    which sorts of \textbf{messages} are exchanged?
     \begin{itemize}
       \item e.g.~\emph{commands}, \emph{events}, \emph{queries}, \emph{etc.}
     \end{itemize}
 
-    \item what information does the \textbf{state} of the system comprehend
-    %
-    \begin{itemize}
-      \item e.g.~\emph{users' data}, \emph{products' data}, \emph{orders' data}, \emph{etc.}
-    \end{itemize}
-  \end{itemize}
+    The exchange of messages and information between client and server is mediated though commands and events.
+    Commands are information sent
+
 
 \subsection{Interaction}\label{interaction}
 
@@ -455,6 +437,7 @@ For each command a sequence diagram representation is shown. In the case of a ga
 
   \item which components are in charge of updating the \textbf{state} of the system? \emph{when}? \emph{how}?
 \end{itemize}
+
 The game server is meant to be a stateless component. The information about each game are stored at the Data tier.
 That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
 
@@ -463,13 +446,6 @@ That choice is due to the fact that if Game server crashes through a valid game,
     \includegraphics[width=1.0\linewidth]{figures/game-lifecycle.png}
     \caption{User create/join lobby sequence diagram}
 \end{figure}
-
-
-
-
-\begin{quote}
-State diagrams are welcome here
-\end{quote}
 
 \subsection{Data and Consistency Issues}\label{data-and-consistency-issues}
 
@@ -503,9 +479,12 @@ State diagrams are welcome here
     \item \emph{why}? \emph{what} data?
   \end{itemize}
 \end{itemize}
+
 The database layer is divided into two repositories: one responsible for user data and one responsible for game data. 
 Both repositories rely on Redis key-value storage, where data is accessed through hash-table-based structures. 
-This allows common operations such as insertion, lookup, and deletion to be performed in constant average time.\subsection{Fault-Tolerance}\label{fault-tolerance}
+This allows common operations such as insertion, lookup, and deletion to be performed in constant average time.
+
+\subsection{Fault-Tolerance}\label{fault-tolerance}
 \begin{itemize}
 
   \item Is there any form of data \textbf{replication} / federation / sharing?
@@ -731,6 +710,10 @@ The manual tests included:
 These tests were in general performed manually because they involve real-time behavior that is difficult to fully capture with automated tests, such as perceived response time, WebSocket message propagation, and the user-visible behavior of multiple clients interacting with the same game.
 \section{Deployment}\label{deployment}
 
+The system has been deployed using the versioning system Git and source code of the system is available on GitHub at the link :
+\begin{verbatim}
+    https://github.com/ajdonker/Hanabi_DS
+\end{verbatim}
 The system is deployed using Docker and Docker Compose. This makes it possible to start the backend, Redis infrastructure, and supporting services in a reproducible environment.
 
 \subsection{Requirements}
@@ -740,8 +723,9 @@ To run the project from scratch, the following software should be installed:
 \begin{itemize}
     \item Docker;
     \item Docker Compose;
-    \item Python 3;
-    \item the Python dependencies listed in \texttt{requirements.txt}.
+    \item Node.js 20.0.0
+    \item Python3;
+    \item python dependencies listed in \texttt{requirements.txt}.
 \end{itemize}
 
 The Python dependencies can be installed with:
@@ -752,19 +736,29 @@ pip install -r requirements.txt
 
 \subsection{Starting the System}
 
-The system can be started using:
+\subsubsection{Backend}
 
+The system can be started using:
 \begin{verbatim}
 docker compose up --build
 \end{verbatim}
 
-If the Docker Compose file is located in a subdirectory, the command can be run with the explicit file path, for example:
+Note that the following command has to be launched in the \emph{/web/backend} subdirectory.
+Otherwisethe command can be run with the explicit file path, for example:
 
 \begin{verbatim}
 docker compose -f web/backend/docker-compose.yml up --build
 \end{verbatim}
 
 This command builds the required images and starts the containers defined in the Docker Compose file.
+
+\subsubsection{Frontend}
+
+Inside the \emph{/web/frontend} subdirectory, these command needs to be launched :
+\begin{verbatim}
+npm install
+npm run dev
+\end{verbatim}
 
 \subsection{Expected Outcome}
 
@@ -825,12 +819,16 @@ The expected outcome is that the backend starts successfully, Redis replication 
   \item Each member must describe their role within the group as objectively as possible.
 \end{itemize}
 
+\subsection{Gabriele Santi}
+My role focused on designing the overall architecture and provide an implementation of domain layer and application layer. 
+I also focused on writing several parts of the report, especially section \ref{design}, including all the images and diagrams.
+
+
 It should be noted that each student is only responsible for their own section.
 
 \section{Future works}\label{future-works}
 
 Discuss possible future works, improvements, extensions, optimizations, etc.
-
 Also discuss here any unimplemented feature, and how you would have implemented it.
 
 \bibliographystyle{plain}
