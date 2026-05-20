@@ -308,11 +308,11 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
   The full code source base can be found on the repository \url{https://github.com/ajdonker/Hanabi_DS}.
 
   \subsubsection{Domain}
-  \begin{figure}[H]
+  \begin{figure}[htbp]
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/domain.png}
+    \includegraphics[width=0.8\linewidth,height = 0.9\textheight,keepaspectratio]{figures/domain.png}
+    \caption{UML domain class} 
     \label{domain-class}
-    \caption{UML domain class}
   \end{figure}
 
   The core class is Game, which mantains all the information of an ongoing game.
@@ -326,7 +326,7 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
   \subsubsection{Application}
   \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth]{figures/application.png}
+    \includegraphics[width=0.8\linewidth, keepaspectratio]{figures/application.png}
     \label{application-class-diagram}
     \caption{UML application class}
   \end{figure}
@@ -442,7 +442,7 @@ The game server is meant to be a stateless component. The information about each
 That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
 Once the game is created, the game server is in charge of waiting for commands from the client side and validating the move. 
 If a move if valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
-The overall situation is showed in \autoref{game-lifecycle-state}.
+The overall situation is shown in \autoref{game-lifecycle-state}.
 
 \begin{figure}[H]
     \centering
