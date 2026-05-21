@@ -417,12 +417,21 @@ This naming convention provides a clear and extensible way to categorize command
   Events are sent from the backend to clients to synchronise the game state and update the user interface in real time.
   \paragraph{Examples of events}
   \begin{itemize}
-      \item \texttt{player.logged\_in}
-      \item \texttt{game.created}
-      \item \texttt{player.joined}
-      \item \texttt{card.played}
-      \item \texttt{turn.changed}
-      \item ...
+      \item \texttt{login\_success} \newline A user was able to login to the system
+      \item \texttt{player\_reconnected} \newline A crashed user was able to reconnect to an ongoing match
+      \item \texttt{registration\_success} \newline A user was able to register to the system
+      \item \texttt{lobby\_created} \newline A new lobby is created
+      \item \texttt{match\_found} \newline A lobby reached the maximum number of user so the game started
+      \item \texttt{turn\_change} \newline The turn is changed
+      \item \texttt{card\_correct} \newline The player played a correct card
+      \item \texttt{card\_wrong} \newline The player played a wrong card
+      \item \texttt{card\_discarded} \newline The player discarded one of his hand's card.
+      \item \texttt{card\_drawn} \newline The player drawed a new card from the pile stack
+      \item \texttt{hint\_given} \newline The player gave a hint to another player
+      \item \texttt{hint\_failed} \newline The plyaer failed to give a hint to another player (eg. wrong turn)
+      \item \texttt{misfire} \newline After a player mistake, one misfire is raised
+      \item \texttt{game\_over} \newline A gameover situation occurred
+      \item \texttt{error} \newline A generic error occurred (eg. unknown command)
   \end{itemize}
 
 \subsection{Interaction}\label{interaction}
@@ -858,11 +867,10 @@ The expected outcome is that the backend starts successfully, Redis replication 
 \newpage
 \section{Self-evaluation}\label{self-evaluation}
 \subsection{Gabriele Santi}
-My role focused on designing the overall architecture and provide an implementation of domain layer and application layer. 
+My role focused on designing the overall architecture system, including distributed system architecture and internal backend.
+I provided an implementation of parts in domain layer (game logic) and application layer, in addition to test regarding that parts. 
 I also focused on writing several parts of the report, especially section \autoref{design}, including all the images and diagrams.
 
-
-%It should be noted that each student is only responsible for their own section.
 \subsection{Blagoja Savevski}
 My role focused on implementing the command-handler flow responsible for connecting the different layers of the system. I also designed and ran unit tests for most of the core objects, with a particular focus on the domain layer, to ensure that the implementation conformed to the project specification.
 
