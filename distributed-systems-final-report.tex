@@ -272,15 +272,15 @@ After each update, the new state is broadcasted to all the players.
 
 \subsection{Infrastructure}\label{infrastructure}
 
-As anticipated in section \autoref{architecture}, the distributed system is composed by three components:
+As anticipated in \autoref{architecture}, the distributed system is composed by three components:
   \begin{itemize}
-    \item Client process that is ran on the player's machine. It can handle initial communication to the lobby, then continue communicating with the spawned game server process. 
+    \item Client process that is ran on the player's machine. It handles initial communication to the lobby, then continue communicating with the spawned game server process. 
     \item Server process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
     \item Database that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
-    Database component is divided in:
+    This component is divided in:
       \begin{itemize}
-        \item Master is the single source of truth.
-        \item Replica contains replicated copy of data. This ensures fault tolerance in case of fault tolerance of the master.
+        \item Master as the single source of truth.
+        \item Replica contains replicated copy of data. This ensures fault tolerance in case of crashes on the master.
       \end{itemize}
   \end{itemize}
  
@@ -291,7 +291,7 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
   \end{figure}
   
   The servers and the database are on the same network and communicate internally identified with IP adresses and ports.
-  The clients on the other hand, can be geographically distributed, they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
+  The clients, on the other hand, can be geographically distributed since they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
   
 \subsection{Modelling}\label{modelling}
 
@@ -302,7 +302,7 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
     \item Presentation level directly communicates with the client and manages communications.
   \end{itemize}
   Game actions are exposed through an RPC-like command interface. 
-  For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method,such as \texttt{playCard(username, cardIndex)}.
+  For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method such as \texttt{playCard(username, cardIndex)}.
   The following subsections contains UML class diagram for each level architecture. Not all class, methods and property have been represented, in order to focus more on the overall behaviour of the system.
   The full code source base can be found on the repository \url{https://github.com/ajdonker/Hanabi_DS}.
 
@@ -320,8 +320,9 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
   \newline
   Board class is a representation of the board state: contains all the information of cards played on the table, misfires and tokens. It has been separated from Game class to better address roles and responsibilities and facilitate better testing and debugging.
   \newline
-  The domain contains two record-like classes: Player and User. The player is a user that joined or created a lobby and is part of a currently running game.
-  User just contains personal information that is used for authenticating the connected client to the system.
+  The domain contains two record-like classes: Player and User.
+  \newline Player is a user that joined or created a lobby and is part of a currently running game.
+  \newline User just contains personal information that is used for authenticating the connected client to the system.
   \subsubsection{Application}
   \begin{figure}[H]
     \centering
@@ -330,11 +331,11 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
     \caption{UML application class}
   \end{figure}
 
-  The class diagram at \autoref{application-class-diagram} shows how commands are managed within the system. Each command is a use case of the system, so an action the user can do.
+  The class diagram above shows how commands are managed within the system. Each command is a use case of the system, so an action the user can do.
   This structure promotes decoupling between the definition of the action and its execution logic, facilitating maintainability and extensibility.
   The IHandler interface defines the standard contract for all business logic handlers.
-  Every handler class implements an execute() method that receives a command and returns a list of events generated by the operation.
-  Commands are pure data transport objects (DTOs) that encapsulate all the parameters required to execute a specific action (e.g. PlayCardCommand, RegisterCommand, JoinLobbyCommand).
+  Every handler class implements an \texttt{execute()} method that receives a command and returns a list of events generated by the operation.
+  Commands are pure data transport objects (DTOs) that encapsulate all the parameters required to execute a specific action (e.g. \texttt{PlayCardCommand}, \texttt{RegisterCommand,} \texttt{JoinLobbyCommand}).
   \newline
   \begin{figure}[H]
     \centering
@@ -342,13 +343,13 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
     \label{infrastructure-class-diagram}
     \caption{UML application class}
   \end{figure}
-  Each handler class is responsible for a single unit of application logic and interact with a respective repositories (such as IGameRepository or IUserRepository) or external services (MatchmakingService) to persist state changes or query the database.
-  IGameRepository interface is used just for reading and persisting game state, while IUserRepository role is reading and persisting user information.
-  RedisRepository implements both interfaces but also provides methods for loading and storing information about GameInformation and player-game mapping, which is useful for the reconnection protocol.
-  MatchmakingService aims at managing a matchmaking system. Its role is to create a lobby and dispatch a list of waiting player in their corresponding lobby. Once a lobby is full, the game is automatically created and a GameServerManager class takes care of spawning a corresponding container.
+  Each handler class is responsible for a single unit of application logic and interact with a respective repositories (such as \texttt{IGameRepository} or \texttt{IUserRepository}) or external services (\texttt{MatchmakingService}) to persist state changes or query the database.
+  \texttt{IGameRepository} interface is used just for reading and persisting game state, while \texttt{IUserRepository} role is reading and persisting user information.
+  \texttt{RedisRepository} implements both interfaces but also provides methods for loading and storing information about the container spawned and player-game mapping, which is useful for the reconnection protocol.
+  \texttt{MatchmakingService} aims at managing a matchmaking system. Its role is to create a lobby and dispatch a list of waiting player in their corresponding lobby. 
+  Once a lobby is full, the game is automatically created and a \texttt{GameServerManager} class takes care of spawning a corresponding container.
 
   \subsubsection{Presentation}
-
   \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/presentation.png}
@@ -358,9 +359,11 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
 
   Presentation layer is responsible for handling real-time communication and the translation of network messages into executable application logic. 
   The design follows the Factory and Dispatcher patterns to ensure a clean separation between the transport layer (WebSockets) and the business logic.
-  Core Components are CommandMessage e Event dataclasses.
-  CommandMessage acts as a generic Data Transfer Object (DTO) that captures incoming raw data, including the action type and its payload.
-  Event represents the system's reactive output, encapsulating the state changes that need to be communicated back to the clients.
+  Core components are CommandMessage e Event dataclasses, which will be better explained in the next section.
+  \begin{itemize}
+    \item \texttt{CommandMessage} acts as a generic Data Transfer Object (DTO) that captures incoming raw data, including the action type and its payload.
+    \item \texttt{Event} represents the system's reactive output, encapsulating the state changes that need to be communicated back to the clients.
+  \end{itemize}
   WebSocketHandler is the central entry point for the real-time communication layer : it orchestrates the lifecycle of a connection (connect, message, disconnect) and it is responsible for:
   \begin{itemize}
     \item Serialization/Deserialization: Converting raw socket strings into structured CommandMessage objects.
@@ -372,7 +375,7 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
   It receives the instantiated command and routes it to the correct IHandler, returning a list of resulting Events. 
   Finally, ConnectionManager is as specialized component that manages the state of active network connections. It maintains bidirectional mappings between:
 
-  \subsection{Events and commands}
+\subsection{Events and commands}
 
   At architectural level, the system distinguish between two types of messages.
     \begin{itemize}
@@ -380,8 +383,8 @@ As anticipated in section \autoref{architecture}, the distributed system is comp
       \item \textbf{Event}: represent a notification generated from backend to inform the clients of an incoming changes to the state of the game.
     \end{itemize}
   In the backend, both structures are implemented using Python \texttt{dataclass}, so as to define the content of the messages in a clear and typed manner.
-  \paragraph{CommandMessage}
-  As shown in the UML class diagram in figure \ref{presentation-class}, a command contains :
+  \subsubsection{CommandMessage}
+  As shown in the UML class diagram in figure \autoref{presentation-class}, a command contains :
   \begin{itemize}
     \item the message type;
     \item the requested action;
@@ -398,16 +401,16 @@ where the first part identifies the domain or entity involved, while the second 
 This naming convention provides a clear and extensible way to categorize commands and events, simplifying both message routing and system maintenance.
   \paragraph{Examples of commands}
   \begin{itemize}
-      \item \texttt{player.login} \newline An user try to login in the system
-      \item \texttt{player.register} \newline An user try to register in the system
-      \item \texttt{lobby.create} \newline An user creates a new lobby
-      \item \texttt{lobby.join} \newline A user join to an existing lobby
+      \item \texttt{player.login} \newline An user try to login in the system.
+      \item \texttt{player.register} \newline An user try to register in the system.
+      \item \texttt{lobby.create} \newline An user creates a new lobby.
+      \item \texttt{lobby.join} \newline A user join to an existing lobby.
       \item \texttt{game.play\_card} \newline A player plays a card from his hand.
       \item \texttt{game.discard\_card} \newline A player discard a card from his hand.
-      \item \texttt{game.give\_hint} \newline A player gives a hint to another player
+      \item \texttt{game.give\_hint} \newline A player gives a hint to another player.
   \end{itemize}
   
-  \paragraph{Event}
+  \subsubsection{Event}
   Events, on the other hand, represent changes produced by the system following the processing of commands.  
   Each event contains:
   \begin{itemize}
@@ -440,7 +443,7 @@ The client and the server interact with a request-response interaction protocol.
 The client always has the initiative in the comunication and sends well-formatted commands to the server.
 The server is responsible for validating the command, applying the game rules and updating the current game state. After that, one or multiple events are sent back to the client.
 The only case in which the server sends events to the client unprompted is when the current player's turn is expired. In this case the game forces a change of turn to the next player.
-For each command a sequence diagram representation is shown. In the case of a game command, all the three moves are in the same diagram for the sake of simplicity.
+For each command a sequence diagram representation is shown. In the case of a game command, all the three moves are in the same diagram for simplicity.
 
 \begin{itemize}
   \item Registration sequence diagram is shown at \autoref{registration-sequence-diagram}
@@ -462,9 +465,9 @@ For each command a sequence diagram representation is shown. In the case of a ga
     \includegraphics[width=1.0\linewidth]{figures/login-sequence-diagram.png}
     \caption{User login sequence diagram}
     \label{login-sequence-diagram}
-
 \end{figure}
-
+In the diagram above it's interesting to notice the reconnection mechanism: once a user successfully login, the system check wheter a game is mapped to the username.
+In case it exists, the game is loaded and the player is automatically reconnected to the ongoing match. Otherwise, it's simply redirected to the lobby view.
 \begin{figure}[H]
     \centering
     \includegraphics[width=1.0\linewidth]{figures/player-game-move-sequence-diagram.png}
@@ -552,24 +555,15 @@ This allows common operations such as insertion, lookup, and deletion to be perf
   %% we might need to implement 
   %% currently client polls constantly. We can impl heartbeat so that server ends the game if client on turn not responding. 
   %\item Is there any \textbf{heart-beating}, \textbf{timeout}, or \textbf{retry mechanism}?
-  \begin{itemize}
-    \item The current architecture uses WebSockets for client-server communication. 
-    Each client maintains a persistent bidirectional connection with the server. 
-    This allows the server to immediately propagate game events to the affected players whenever the game state changes.
+  The current architecture uses WebSockets for client-server communication, so each client maintains a persistent bidirectional connection with the server. 
+  This allows the server to immediately propagate game events to the affected players whenever the game state changes. \newline
+  Connection failures are handled by the WebSocket connection manager. If a client disconnects, its connection is removed from the active connection registry, so the server no longer attempts to send game updates through an invalid connection.
+  
+  A \emph{timeout} mechanism is implemented at the game logic level: its purpose is to prevent the game from remaining blocked when the player whose turn it is becomes inactive, does not perform an action in time or crashes.
 
-    \item A \emph{timeout} mechanism is implemented at the game logic level. 
-    Its purpose is to prevent the game from remaining blocked when the player whose turn it is becomes inactive or does not perform an action in time.
-
-    \item Connection failures are handled by the WebSocket connection manager. 
-    If a client disconnects, its connection is removed from the active connection registry, so the server no longer attempts to send game updates through an invalid connection.
-
-    \item A \emph{retry} mechanism is implemented between the application server and Redis. 
-    Since Redis is managed using Sentinel, a failure of the current master may require the application to rediscover the newly promoted master. 
-    In that case, the repository retries the database operation after master rediscovery, until the configured retry limit is reached.
-
-    \item The system does not rely on client-side polling or repeated command retries during normal gameplay. 
-    Instead, WebSockets are used as the main event propagation mechanism, while Redis retry logic is reserved for infrastructure-level failures in the storage layer.
-  \end{itemize}
+  A \emph{retry} mechanism is implemented between the application server and Redis. 
+  Since Redis is managed using Sentinel, a failure of the current master may require the application to rediscover the newly promoted master. In that case, the repository retries the database operation after master rediscovery, until the configured retry limit is reached.
+  The system does not rely on client-side polling or repeated command retries during normal gameplay. Instead, WebSockets are used as the main event propagation mechanism, while Redis retry logic is reserved for infrastructure-level failures in the storage layer.
   
   %\item Is there any form of \textbf{error handling}?
   %
@@ -591,47 +585,44 @@ This allows common operations such as insertion, lookup, and deletion to be perf
 Availability in the system is supported through a combination of stateless application servers, Redis replication, Sentinel-based failover, and controlled recovery mechanisms. 
 The system is designed to remain operational when individual components fail, although it prioritizes consistency of the game state over continuous availability during severe infrastructure failures.
 
-\begin{itemize}
+%\begin{itemize}
   %\item Is there any \textbf{caching} mechanism?
-  %\begin{itemize}
-    \item The client keeps a local copy of the most recently received game state. 
+  \subsubsection{Caching}
+    The client keeps a local copy of the most recently received game state. 
     This copy is used only as a temporary fallback for the user interface, for example when a short disconnection occurs or when the client is waiting for an updated state from the server. 
     The cached state is not treated as authoritative and cannot be used to continue the game independently from the server. 
     Its purpose is therefore to preserve UI consistency, not to replace the persistent game state stored in Redis.
-  %\end{itemize}
 
   %\item Is there any form of \textbf{load balancing}?
-  \begin{itemize}
-    \item The system provides load distribution at the game-server level. 
+  \subsubsection{Load balancing}
+    The system provides load distribution at the game-server level. 
     Instead of running all matches inside a single backend process, the matchmaker creates separate game server instances for active games. 
     This distributes gameplay execution across multiple server processes and prevents one game from blocking the execution of another.
 
-    \item Since the application servers are stateless and the persistent state is stored in Redis, requests do not depend on a specific backend instance. 
+    Since the application servers are stateless and the persistent state is stored in Redis, requests do not depend on a specific backend instance. 
     This makes the architecture compatible with load balancing in front of the application layer, for example through a reverse proxy such as NGINX. 
     In that case, incoming client connections can be distributed across available backend instances, while Redis remains the shared storage layer.
     The system can even be extended with load balancing incoming player connections on multiple matchmaking services running in parallel. 
-  \end{itemize}
-
   %\item In case of \textbf{network partitioning}, how does the system behave?
-  \begin{itemize}
-    \item In case of a network partition, the system prioritizes consistency over availability. 
+  \subsubsection{Network Partition}
+    In case of a network partition, the system prioritizes consistency over availability. 
     Since Hanabi is a turn-based game, allowing different partitions to independently update the game state could lead to conflicting moves, duplicated turns, or an invalid game history. 
     Therefore, the system should avoid accepting updates unless the authoritative Redis master can be reached.
 
-    \item Redis Sentinel monitors the Redis master and replicas. 
+    Redis Sentinel monitors the Redis master and replicas. 
     If the current master becomes unreachable and Sentinel can establish the required quorum, a replica may be promoted to become the new master. 
     The application then rediscovers the current master and retries failed Redis operations. 
     During the failover interval, some operations may temporarily fail or be delayed.
 
-    \item If a game server becomes separated from Redis or from the clients, it cannot safely continue the game using only local information. 
+    If a game server becomes separated from Redis or from the clients, it cannot safely continue the game using only local information. 
     Connected clients may temporarily keep displaying the last received state, but new game actions should only be accepted once the server can again access the authoritative state in Redis.
-  \end{itemize}
-\end{itemize}
+%\end{itemize}
 \subsection{Security}\label{security}
 
 \begin{itemize}
   %\item Is there any form of \textbf{authentication}?
-    \item Users authenticate using a username and password. 
+    \item Authentication: \newline
+    Users authenticate using a username and password. 
     The validation is performed on the server side, so the client is not trusted to decide whether a login attempt is valid. 
     Instead of storing plaintext passwords, the system stores a hashed version of the password in Redis. 
     In the current implementation, SHA-256 is used as the hashing function. 
@@ -643,16 +634,16 @@ The system is designed to remain operational when individual components fail, al
 
   %\item Is there any form of \textbf{authorization}?
   %\begin{itemize}
-    \item The system does not implement a complex role-based authorization mechanism. 
+    \item Authorization: \newline
+    The system does not implement a complex role-based authorization mechanism. 
     All authenticated users have the same general role: player. 
-    Access control is therefore mainly enforced through the game logic rather than through separate user roles.
-
-    \item For example, a player can only interact with games in which they participate, and game actions are validated by the server before being applied. 
+    Access control is therefore mainly enforced through the game logic rather than through separate user roles. For example, a player can only interact with games in which they participate, and game actions are validated by the server before being applied. 
     This prevents clients from directly modifying the game state or executing invalid actions without server-side checks.
   %\end{itemize}
 
 \end{itemize}
 \newpage
+
 \section{Implementation}\label{implementation}
 
 \begin{itemize}
@@ -688,6 +679,7 @@ The server frontend part has been realized using React, Vite and Typescript.
   %\item any particular \emph{framework} / \emph{technology} being exploited goes here
 %\end{itemize}
 \newpage
+
 \section{Validation}\label{validation}
 
 The system was validated at different levels. First, the application logic was tested separately from the communication protocol, so that the correctness of the game rules and matchmaking logic could be checked independently. Afterwards, integration and end-to-end tests were used to verify that the complete distributed system behaves according to the specification.
@@ -761,6 +753,7 @@ The manual tests included:
 
 These tests were in general performed manually because they involve real-time behavior that is difficult to fully capture with automated tests, such as perceived response time, WebSocket message propagation, and the user-visible behavior of multiple clients interacting with the same game.
 \newpage
+
 \section{Deployment}\label{deployment}
 
 The system has been deployed using the versioning system Git and source code of the system is available on GitHub at the link:
@@ -807,7 +800,7 @@ This command builds the required images and starts the containers defined in the
 
 \subsubsection{Frontend}
 
-Inside the \emph{/web/frontend} subdirectory, these command needs to be launched :
+Inside the \texttt{/web/frontend} subdirectory, these command needs to be launched :
 \begin{verbatim}
 npm install
 npm run dev
@@ -833,7 +826,40 @@ The deployment was engineered using containerization so that the system can be s
 
 The backend connects to Redis through Sentinel, instead of depending only on a fixed Redis master. This allows the backend to discover the current Redis master after a failover. The game server manager can then dynamically create separate game containers when the matchmaking service starts a new game.
 
+\subsection{Screenshosts}
+Below are some screenshots of the system.
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/registration.png}
+    \caption{Registration view}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/login.png}
+    \caption{Login view}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/lobby.png}
+    \caption{Lobby view}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/waiting-player.png}
+    \caption{Waiting player view}
+\end{figure}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=1.0\linewidth]{figures/game.png}
+    \caption{Game view}
+\end{figure}
+
 \newpage
+
 \section{User Guide}\label{user-guide}
 
 To use the system, the user first starts the backend infrastructure using Docker Compose:
@@ -842,21 +868,19 @@ To use the system, the user first starts the backend infrastructure using Docker
 docker compose up --build
 \end{verbatim}
 
-After the system has started successfully, clients can be launched in separate terminals. For example:
+%After the system has started successfully, clients can be launched in separate terminals. For example:
 
-\begin{verbatim}
-python client.py
-\end{verbatim}
-
+%\begin{verbatim}
+%python client.py
+%\end{verbatim}
 Each client connects to the backend server and can perform actions such as logging in, creating a lobby, joining a lobby, and playing a game once matchmaking succeeds.
-
 The expected usage flow is:
 
 \begin{itemize}
-    \item start the system with Docker Compose;
-    \item open one terminal for each client;
-    \item run \texttt{python client.py} in each client terminal;
-    \item create a lobby with one client;
+    \item open one browser tab for each client (make sure to be in incognito mode);
+    \item type \texttt{localhost:8080/register} to go to registration view;
+    \item once registration is succesful, the client is redirected to login area, which is reachable at the address \texttt{localhost:8080/login}
+    \item if login is correct, the user is redirected to lobby view, where it can create a lobby or join an existing one;
     \item join the lobby with another client;
     \item wait for the matchmaking service to create a game server;
     \item connect to the game server;
@@ -865,6 +889,7 @@ The expected usage flow is:
 
 The expected outcome is that the backend starts successfully, Redis replication and Sentinel are active, and a new game server container is spawned when enough players join the same lobby. 
 \newpage
+
 \section{Self-evaluation}\label{self-evaluation}
 \subsection{Gabriele Santi}
 My role focused on designing the overall architecture system, including distributed system architecture and internal backend.
@@ -880,7 +905,6 @@ Furthermore, I was responsible for prototyping earlier versions of the system th
 My role focused mainly on the frontend implementation and its integration with the distributed backend. I designed and implemented the pages for registration, login, lobby, the waiting room, and the game interface.
 
 On the backend side, I implemented the server-side WebSocket flow for game actions and state synchronization. I contributed to lobby management, game-state retrieval, player-game cleanup, bug fixing, and the Docker-based recovery mechanism for failed game containers.
-
 
 \section{Future works}\label{future-works}
 
