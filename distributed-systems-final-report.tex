@@ -646,38 +646,78 @@ The system is designed to remain operational when individual components fail, al
 
 \section{Implementation}\label{implementation}
 
-\begin{itemize}
-  %\item which \textbf{network protocols} to use?
-    %\begin{itemize}
-    \item To guarantee reliable message delivery, TCP is used. Connections between clients and servers and servers and the matchmaking service are carefully managed in the application logic.
-    On top of that, WebSocket communication has been used as an application layer protocol. This ensure fast, reliable and bi-directional comunication, which makes it the best choice for real time gaming.  
-    %\end{itemize}
-  %\item how should \emph{in-transit data} be \textbf{represented}?
-  %\begin{itemize}
-    \item In-transit data is exchanged between the backend and the local frontend. As a common understanding language, JSON format has been chosen for its simplicity, in general messages as Python dictionaries are serialized into JSON objects. The serialization and deserialization concerns are separated out in a GameSerializer object.
-    At the receiving end, the inverse decoding is implemented, both using the json python package.
-  %\end{itemize}/
-  
-  %\item how should \emph{databases} be \textbf{queried}?
-  %\begin{itemize}
-    \item The Redis game database is queried for the appropriate game for a spawned game server using a unique game identifier.
-  %\end{itemize}
-  
-  %\item how should components be \emph{authenticated}?
- 
+\subsection{Network protocols}
 
-\end{itemize}
+The main communication protocol between the browser and the backend is WebSocket. 
+WebSocket was chosen because the game requires bidirectional communication: the browser sends commands to the server, while the server must also push events to all players in the same game. 
+This is used for actions such as playing a card, discarding a card, giving a hint, notifying turn changes, and announcing the end of the game.
+
+The system also uses HTTP for auxiliary operations that do not require a persistent bidirectional channel. 
+For example, when a game container fails and the browser loses its WebSocket connection, the frontend can send an HTTP request to the main backend to resolve the current address of the game server. 
+The backend can then recreate the failed game container and return the new host and port to the client.
+
+Communication between backend components, Redis, Redis Sentinel, and dynamically spawned game containers happens through the Docker network defined in the Compose configuration. 
+This allows containers to reach each other by service name, for example when the backend connects to Redis Sentinel.
+
+\subsection{Data format and representation}
+
+In-transit data is represented using JSON dictionaries. 
+The client sends command messages containing an action name, a request identifier, and a data payload. 
+The backend replies with batches of events, also represented as JSON objects. 
+This structure makes the protocol simple to inspect and easy to handle in both Python and TypeScript.
+
+On the backend, incoming WebSocket messages are decoded and transformed into command objects by the presentation layer. 
+The command dispatcher then forwards each command to the appropriate handler. 
+After the command is executed, the server returns events such as successful card plays, discarded cards, hints, turn changes, errors, or game-over notifications.
+
+Game state is also serialized as JSON before being stored in Redis or sent to the frontend. 
+The serialization logic converts domain objects such as games, players, cards, piles, discard piles, tokens, and misfires into dictionaries. 
+When a game server loads a game from Redis, the inverse conversion reconstructs the corresponding domain objects.
+
+\subsection{Database access}
+
+Redis is used as a key-value database. 
+Instead of SQL-style queries, the system accesses data through structured keys. 
+The most important stored data includes user accounts, game states, game metadata, and mappings between players and their active games.
+
+Each game server can load and update the game it is responsible for by using the game identifier. 
+Game metadata stores information such as the game container name, players, host, and port. 
+Player-game mappings are used to prevent a player from joining multiple unfinished games and to support reconnection after login.
+
+Redis Sentinel is used by the backend to discover the current Redis master. 
+This avoids depending permanently on a single Redis master address and supports failover if the original master becomes unavailable.
+
+\subsection{Authentication and authorization}
+
+Users authenticate with a username and password. 
+Registration stores the user information in Redis, while login verifies the submitted credentials on the server side. 
+Passwords are stored as hashes rather than as plaintext.
+
+The system does not implement role-based authorization, since all users have the same role of player. 
+Instead, authorization is enforced through application and domain logic. 
+For example, the backend checks whether a player is already in an unfinished game, whether a lobby exists, whether the player belongs to the game, and whether it is actually that player's turn before applying an action.
 
 \subsection{Technological details}\label{technological-details}
-Concerning the server backend part, the language used was python, with the use of the external framework FastAPI:
-FastAPI \dots
 
-The server frontend part has been realized using React, Vite and Typescript.
-\dots
+The backend is implemented in Python using FastAPI. 
+FastAPI is used to expose both HTTP endpoints and WebSocket endpoints, while Uvicorn is used as the server. 
+The backend follows a layered structure: the presentation layer handles WebSocket messages and command creation, the application layer dispatches commands to handlers, and the domain layer applies the actual Hanabi game rules.
 
-%\begin{itemize}
-  %\item any particular \emph{framework} / \emph{technology} being exploited goes here
-%\end{itemize}
+Redis is used as the persistence layer, while Redis Sentinel provides master discovery and failover support. 
+The backend accesses Redis through a repository class that hides the concrete key-value operations from the rest of the application.
+
+Docker and Docker Compose are used for deployment. 
+Compose starts the main backend, Redis master, Redis replica, and Sentinel. 
+The backend also uses the Python Docker SDK to create separate game server containers dynamically when matchmaking starts a new game. 
+If a game container fails, the main backend can recreate it, and the client can reconnect using the game state stored in Redis.
+
+Testing is performed with pytest. 
+The test suite covers domain logic, command handlers, matchmaking behavior, Redis repository operations, WebSocket message handling, and Docker container management.
+
+The frontend is implemented with React, TypeScript, and Vite. 
+React is used to build the registration page, login page, lobby page, waiting room, and game interface. 
+TypeScript is used to implement the WebSocket client, which manages the connection to the backend, sends commands, and processes incoming events to update the user interface.
+Vite is used as the build tool to bundle the frontend code and serve it during development.
 \newpage
 
 \section{Validation}\label{validation}
