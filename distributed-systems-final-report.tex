@@ -494,7 +494,7 @@ In case it exists, the game is loaded and the player is automatically reconnecte
 The game server is meant to be a stateless component. The information about each game is stored at the data tier.
 That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
 Once the game is created, the game server is in charge of waiting for commands from the client side and validating the move. 
-If a move if valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
+If a move is valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
 The overall situation is shown in \autoref{game-lifecycle-state}.
 
 \begin{figure}[H]
@@ -823,7 +823,6 @@ To run the project from scratch, the following software should be installed:
     \item Python3;
     \item python dependencies listed in \texttt{requirements.txt}.
 \end{itemize}
-distributed-systems-final-report.aux
 The Python dependencies can be installed with:
 
 \begin{verbatim}
@@ -928,9 +927,9 @@ The expected usage flow is:
 
 \begin{itemize}
     \item open one browser tab for each client (make sure to be in incognito mode);
-    \item type \texttt{localhost:8080/register} to go to registration view;
-    \item once registration is succesful, the client is redirected to login area, which is reachable at the address \texttt{localhost:8080/login}
-    \item if login is correct, the user is redirected to lobby view, where it can create a lobby or join an existing one;
+    \item type \texttt{http://localhost:3000/register} to go to registration page;
+    \item once registration is succesful, the client is redirected to login page, which is reachable at the address \texttt{http://localhost:3000/login}
+    \item if login is correct, the user is redirected to the lobby page, where it can create a lobby or join an existing one;
     \item join the lobby with another client;
     \item wait for the matchmaking service to create a game server;
     \item connect to the game server;
