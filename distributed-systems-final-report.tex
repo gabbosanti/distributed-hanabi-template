@@ -29,7 +29,7 @@
 \maketitle
 
 \begin{abstract}
-Hanabi is a cooperative multiplayer card game for 2--5 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
+Hanabi is a cooperative multiplayer card game for 2--4 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
 
 \begin{figure}[h!]
@@ -39,8 +39,8 @@ Hanabi is a cooperative multiplayer card game for 2--5 players where players sco
 
 \section{Concept}\label{concept}
 
-The software implements the game Hanabi, a 2--5 player cooperative board game where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards.
-Each player starts with 4--5 cards depending on the player count from a 50-card deck. The goal is to order the cards by number (1--5) and by color (red, yellow, green, blue, white).
+The software implements the game Hanabi, a 2--4 player cooperative board game where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards.
+Each player starts with 5 cards from a 50-card deck. The goal is to order the cards by number (1--5) and by color (red, yellow, green, blue, white).
 A successful game ends with 5 different colored decks in increasing order. 
 Information for your own cards must only be acquired through the strict communication methods the action systems permits.
 Each turn, one user does one of the allowed actions, then the updated game state is shared to all the users. 
@@ -295,11 +295,10 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
   
 \subsection{Modelling}\label{modelling}
 
-  The game server internal architecture has been designed to have a level approach, so each component has a different responsibility.
-  \begin{itemize}
-    \item Domain level contains all the game logic and is responsible for applying the game rules and modifying the game state accordingly.
-    \item Application level executes commands coming from the client and addresses the operation to the correct use case.
-    \item Presentation level directly communicates with the client and manages communications.
+The game server uses a layered internal architecture, where each layer has a different responsibility.  \begin{itemize}
+    \item Domain layer contains all the game logic and is responsible for applying the game rules and modifying the game state accordingly.
+    \item Application layer executes commands coming from the client and addresses the operation to the correct use case.
+    \item Presentation layer directly communicates with the client and manages communications.
   \end{itemize}
   Game actions are exposed through an RPC-like command interface. 
   For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method such as \texttt{playCard(username, cardIndex)}.
