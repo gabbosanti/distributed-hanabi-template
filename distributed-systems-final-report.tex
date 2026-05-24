@@ -29,7 +29,7 @@
 \maketitle
 
 \begin{abstract}
-Hanabi is a cooperative multiplayer card game for 2--5 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
+Hanabi is a cooperative multiplayer card game for 2--4 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
 
 \begin{figure}[h!]
@@ -39,15 +39,15 @@ Hanabi is a cooperative multiplayer card game for 2--5 players where players sco
 
 \section{Concept}\label{concept}
 
-The software implements the game Hanabi, a 2--5 player cooperative board game where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards.
-Each player starts with 4--5 cards depending on the player count from a 50-card deck. The goal is to order the cards by number (1--5) and by color (red, yellow, green, blue, white).
+The software implements the game Hanabi, a 2--4 player cooperative board game where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards.
+Each player starts with 5 cards from a 50-card deck. The goal is to order the cards by number (1--5) and by color (red, yellow, green, blue, white).
 A successful game ends with 5 different colored decks in increasing order. 
 Information for your own cards must only be acquired through the strict communication methods the action systems permits.
 Each turn, one user does one of the allowed actions, then the updated game state is shared to all the users. 
 Each player can:
     \begin{itemize}
         \item \emph{Give a hint} to another player and spend one of 8 hint tokens in total. The hint can give information about either the color or the number of a subset of the other player's cards. 
-        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card belongs to the wrong color, or is less than or equal to the topmost card of that color deck, the move is considered unsuccessful and one of 3 life tokens is spent. Then the player draws a card to replace the played one. 
+        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card cannot be legally placed on the corresponding deck, the move is unsuccessful and the number of misfires increases by one. Then the player draws a card to replace the played one.
         \item \emph{Discard} one card from their hand and return one of the already spent tokens to the pool. The player must end each turn with the same number of cards, so a new card is drawn. 
     \end{itemize}
 
@@ -295,11 +295,10 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
   
 \subsection{Modelling}\label{modelling}
 
-  The game server internal architecture has been designed to have a level approach, so each component has a different responsibility.
-  \begin{itemize}
-    \item Domain level contains all the game logic and is responsible for applying the game rules and modifying the game state accordingly.
-    \item Application level executes commands coming from the client and addresses the operation to the correct use case.
-    \item Presentation level directly communicates with the client and manages communications.
+The game server uses a layered internal architecture, where each layer has a different responsibility.  \begin{itemize}
+    \item Domain layer contains all the game logic and is responsible for applying the game rules and modifying the game state accordingly.
+    \item Application layer executes commands coming from the client and addresses the operation to the correct use case.
+    \item Presentation layer directly communicates with the client and manages communications.
   \end{itemize}
   Game actions are exposed through an RPC-like command interface. 
   For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method such as \texttt{playCard(username, cardIndex)}.
@@ -389,6 +388,7 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
     \item the message type;
     \item the requested action;
     \item a payload containing the data required for the operation;
+    \item token for authentication and authorization purposes;
     \item any additional information such as the request or connection identifier.
   \end{itemize}
   Commands are used to represent actions requested by players, such as entering the lobby, starting a game or executing a move.
@@ -420,21 +420,21 @@ This naming convention provides a clear and extensible way to categorize command
   Events are sent from the backend to clients to synchronise the game state and update the user interface in real time.
   \paragraph{Examples of events}
   \begin{itemize}
-      \item \texttt{login\_success} \newline A user was able to login to the system
-      \item \texttt{player\_reconnected} \newline A crashed user was able to reconnect to an ongoing match
-      \item \texttt{registration\_success} \newline A user was able to register to the system
-      \item \texttt{lobby\_created} \newline A new lobby is created
-      \item \texttt{match\_found} \newline A lobby reached the maximum number of users, so the game started
-      \item \texttt{turn\_change} \newline The turn is changed
-      \item \texttt{card\_correct} \newline The player played a correct card
-      \item \texttt{card\_wrong} \newline The player played a wrong card
-      \item \texttt{card\_discarded} \newline The player discarded one card from his hand.
-      \item \texttt{card\_drawn} \newline The player drew a new card from the deck
-      \item \texttt{hint\_given} \newline The player gave a hint to another player
-      \item \texttt{hint\_failed} \newline The player failed to give a hint to another player (e.g. wrong turn)
-      \item \texttt{misfire} \newline After a player mistake, one misfire is raised
-      \item \texttt{game\_over} \newline A game-over situation occurred
-      \item \texttt{error} \newline A generic error occurred (e.g. unknown command)
+      \item \texttt{login\_success} \newline A user logs in successfully.
+      \item \texttt{player\_reconnected} \newline A disconnected user reconnects to an ongoing match.
+      \item \texttt{registration\_success} \newline A user registers successfully.
+      \item \texttt{lobby\_created} \newline A new lobby is created.
+      \item \texttt{match\_found} \newline A lobby reaches the maximum number of users, so the game starts.
+      \item \texttt{turn\_change} \newline The turn changes.
+      \item \texttt{card\_correct} \newline The player plays a correct card.
+      \item \texttt{card\_wrong} \newline The player plays a wrong card.
+      \item \texttt{card\_discarded} \newline The player discards one card from his hand.
+      \item \texttt{card\_drawn} \newline The player draws a new card from the deck.
+      \item \texttt{hint\_given} \newline The player gives a hint to another player.
+      \item \texttt{hint\_failed} \newline The player fails to give a hint to another player (e.g., wrong turn).
+      \item \texttt{misfire} \newline A player mistake raises one misfire.
+      \item \texttt{game\_over} \newline The game ends.
+      \item \texttt{error} \newline A generic error occurs (e.g., unknown command).
   \end{itemize}
 
 \subsection{Interaction}\label{interaction}
@@ -494,7 +494,7 @@ In case it exists, the game is loaded and the player is automatically reconnecte
 The game server is meant to be a stateless component. The information about each game is stored at the data tier.
 That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
 Once the game is created, the game server is in charge of waiting for commands from the client side and validating the move. 
-If a move if valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
+If a move is valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
 The overall situation is shown in \autoref{game-lifecycle-state}.
 
 \begin{figure}[H]
@@ -823,7 +823,6 @@ To run the project from scratch, the following software should be installed:
     \item Python3;
     \item python dependencies listed in \texttt{requirements.txt}.
 \end{itemize}
-distributed-systems-final-report.aux
 The Python dependencies can be installed with:
 
 \begin{verbatim}
@@ -928,9 +927,9 @@ The expected usage flow is:
 
 \begin{itemize}
     \item open one browser tab for each client (make sure to be in incognito mode);
-    \item type \texttt{localhost:8080/register} to go to registration view;
-    \item once registration is succesful, the client is redirected to login area, which is reachable at the address \texttt{localhost:8080/login}
-    \item if login is correct, the user is redirected to lobby view, where it can create a lobby or join an existing one;
+    \item type \texttt{http://localhost:3000/register} to go to registration page;
+    \item once registration is succesful, the client is redirected to login page, which is reachable at the address \texttt{http://localhost:3000/login}
+    \item if login is correct, the user is redirected to the lobby page, where it can create a lobby or join an existing one;
     \item join the lobby with another client;
     \item wait for the matchmaking service to create a game server;
     \item connect to the game server;
