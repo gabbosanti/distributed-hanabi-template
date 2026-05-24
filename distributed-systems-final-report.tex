@@ -9,12 +9,12 @@
 \newcommand{\emailaddr}[1]{\href{mailto:#1}{\texttt{#1}}}
 
 \title{\LARGE
-    Final Report : Distributed Hanabi
+    Final Report: Distributed Hanabi
 }
 
-\subtitle{Final Report for the Distributed Systems Course 2025-2026}
+\subtitle{Final Report for the Distributed Systems Course 2025--2026}
 
-\author{
+\author{%
     Blagoja Savevski \\ \emailaddr{blagoja.savevski@studio.unibo.it}
     \and
     Gabriele Santi \\ \emailaddr{gabriele.santi@studio.unibo.it}
@@ -29,7 +29,7 @@
 \maketitle
 
 \begin{abstract}
-Hanabi is a cooperative multiplayer card game for 2-5 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
+Hanabi is a cooperative multiplayer card game for 2--5 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
 
 \begin{figure}[h!]
@@ -39,27 +39,27 @@ Hanabi is a cooperative multiplayer card game for 2-5 players where players scor
 
 \section{Concept}\label{concept}
 
-The software implements the game Hanabi, a 2-5 player cooperative board game where players attempt to build the greatest "pyrotechnic show", by ordering each other's cards.
-Each player starts with 4-5 cards depending on the player count from a 50 card deck. The goal is to order the cards by number (1-5) and by color (red,yellow,green,blue,white).
+The software implements the game Hanabi, a 2--5 player cooperative board game where players attempt to build the greatest "pyrotechnic show" by ordering each other's cards.
+Each player starts with 4--5 cards depending on the player count from a 50-card deck. The goal is to order the cards by number (1--5) and by color (red, yellow, green, blue, white).
 A successful game ends with 5 different colored decks in increasing order. 
 Information for your own cards must only be acquired through the strict communication methods the action systems permits.
 Each turn, one user does one of the allowed actions, then the updated game state is shared to all the users. 
 Each player can:
     \begin{itemize}
         \item \emph{Give a hint} to another player and spend one of 8 hint tokens in total. The hint can give information about either the color or the number of a subset of the other player's cards. 
-        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card turns out to be in the wrong color, or lesser or equal to the topmost of that color deck, the move is considered unsuccessful and one of 3 life tokens is spent. Then he draws a card in the place of the played one. 
-        \item \emph{Discard} one card from his hand and return one of the already spent tokens to the pool. The player must end each turn with the same amount of cards and so a new card is drawn. 
+        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card belongs to the wrong color, or is less than or equal to the topmost card of that color deck, the move is considered unsuccessful and one of 3 life tokens is spent. Then the player draws a card to replace the played one. 
+        \item \emph{Discard} one card from their hand and return one of the already spent tokens to the pool. The player must end each turn with the same number of cards, so a new card is drawn. 
     \end{itemize}
 
 
 \subsection{Use Case description}
 The aim of this project is to design and implement a distributed version of the game Hanabi.
-It consist on a web-based application, where players can connect to a server and play togheter directly from their browsers. 
+It consists of a web-based application where players can connect to a server and play together directly from their browsers. 
 The system needs to store basic player information such as full name, unique ID, username and password, in order to conduct orderly match creation and orchestration.
 Once the client is connected to the server, authentication is required and if a player is not registered yet, the system should allow the user to sign up.
-Then a player can choose wheter to create a lobby to play with other players or join extisting ones.
+Then a player can choose whether to create a lobby to play with other players or join existing ones.
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
-Players visualize the game shared state on their clients and, on each turn, send  a command to the server. Each command is validated by the server, according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
+Players visualize the shared game state on their clients and, on each turn, send a command to the server. Each command is validated by the server according to Hanabi rules, then updates the game state accordingly and notifies all players of the new state.
 
 \begin{figure}[H]
     \centering
@@ -100,43 +100,43 @@ The focus is not only game functionality, but also distributed coordination, con
 \label{functional-requirements}
 
 \begin{itemize}
-  \item \textbf{FR1 : Lobby and Session Management} \newline
+  \item \textbf{FR1: Lobby and Session Management} \newline
   The system shall allow multiple users to connect, enter a lobby, and start a game session once the configured player threshold is reached.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Users can connect to the server, see a lobby with waiting players, and start a game when enough players have joined.
   \end{itemize}
 
-  \item \textbf{FR2 : Player Actions} \newline 
+  \item \textbf{FR2: Player Actions} \newline
   The system shall allow players to perform valid game actions (e.g. give hints, play cards, discard cards) and update the game state accordingly.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Players can perform actions based on the game rules and their teammates' cards, and the game state updates correctly based on those actions
   \end{itemize}
 
-  \item \textbf{FR3 : Player Identification} \newline
+  \item \textbf{FR3: Player Identification} \newline
   The system shall assign a unique identifier to each player to manage game sessions and actions.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Each player receives a unique ID upon connecting, and the system uses this ID to track their actions and game state.
   \end{itemize}
 
-  \item \textbf{FR4 : Game Conclusion} \newline
+  \item \textbf{FR4: Game Conclusion} \newline
   The system shall determine when a game session has concluded based on the game rules and notify all players of the outcome.
   \begin{itemize}
-    \item \textbf{Acceptance Criterion:} When the game ends (e.g. there are no cards left, the number of misfires exceeds 3), all clients are notified with the final game outcome and overall score.    
+    \item \textbf{Acceptance Criterion:} When the game ends (e.g. there are no cards left or the number of misfires reaches 3), all clients are notified with the final game outcome and overall score.    
   \end{itemize}
 
-  \item \textbf{FR5 : Player Disconnection Handling} \newline
+  \item \textbf{FR5: Player Disconnection Handling} \newline
   The system shall handle player disconnections gracefully, allowing the game to continue if possible.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} If a player disconnects, the system allows the remaining players to continue the game, and the disconnected player can reconnect within a reasonable time frame without losing their progress.
   \end{itemize}
 
-  \item \textbf{FR6 : Security} \newline
+  \item \textbf{FR6: Security} \newline
   The system shall implement basic security measures to protect player data and prevent unauthorized access.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Player data is stored securely, and the system prevents unauthorized access to game sessions and player information through authentication.
   \end{itemize}
 
-  \item \textbf{FR7 : User Interface} \newline
+  \item \textbf{FR7: User Interface} \newline
   The system shall provide a user-friendly interface for players to interact with the game.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Players can easily understand how to perform actions and view the game state through the interface, with clear visual cues for game elements and actions.
@@ -149,25 +149,25 @@ The focus is not only game functionality, but also distributed coordination, con
 
 %
 \begin{itemize}
-  \item \textbf{NFR1 : Performance} \newline
+  \item \textbf{NFR1: Performance} \newline
   The system shall respond to player actions and update the game state within an acceptable time frame to ensure a smooth gaming experience.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The system processes player actions and updates the game state within 500ms, ensuring that players experience minimal lag during gameplay.
   \end{itemize}
 
-  \item \textbf{NFR2 : Fault Tolerance} \newline
+  \item \textbf{NFR2: Fault Tolerance} \newline
   The system shall be able to recover from server failures without losing game state or significantly disrupting the player experience.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} In the event of a server failure, the backup server can take over within a reasonable time frame (e.g., under 5 seconds) and restore the game state, allowing players to continue without losing progress.
   \end{itemize}
 
-  \item \textbf{NFR3 : Consistency} \newline
+  \item \textbf{NFR3: Consistency} \newline
   The system shall ensure that all clients have a consistent view of the game state at all times.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} After any player action, all clients receive the updated game state, and it reflects the same information across all clients without discrepancies.
   \end{itemize}
 
-  \item \textbf{NFR4 : Horizontal Scalability} \newline
+  \item \textbf{NFR4: Horizontal Scalability} \newline
   The system must support multiple server instances to handle an increasing number of concurrent game sessions and players.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The system can run multiple server instances that can manage separate game sessions, and the load is distributed effectively without performance degradation as the number of players increases.
@@ -176,29 +176,29 @@ The focus is not only game functionality, but also distributed coordination, con
 \end{itemize}
 
 \subsection{Implementation Requirements}
-\label{Implementation Requirements}
+\label{implementation-requirements}
 
 %
 \begin{itemize}
-  \item \textbf{IR1 : Technology Stack} \newline
+  \item \textbf{IR1: Technology Stack} \newline
   The system shall be implemented using Python for the server-side logic and React for the client-side interface.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The server is implemented in Python, the client interface is built with React.
   \end{itemize}
 
-  \item \textbf{IR2 : Communication Protocol} \newline
+  \item \textbf{IR2: Communication Protocol} \newline
   The system shall use WebSockets for real-time communication between the server and clients.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The server and clients communicate using WebSockets, allowing for real-time updates of the game state and player actions.
   \end{itemize}
 
-  \item \textbf{IR3 : Data Storage} \newline
+  \item \textbf{IR3: Data Storage} \newline
   The system shall use a Redis database to store game state and player information.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} Game state and player information are stored in Redis, and the system can retrieve and update this information as needed during gameplay.
   \end{itemize}
 
-  \item \textbf{IR4 : Containerization} \newline
+  \item \textbf{IR4: Containerization} \newline
   The system shall be containerized using Docker to facilitate deployment and scalability.
   \begin{itemize}
     \item \textbf{Acceptance Criterion:} The application can be built and run using Docker, with a provided Dockerfile and docker-compose configuration for easy deployment.
@@ -213,31 +213,31 @@ The project is designed as a distributed system and therefore takes into account
 
 \begin{itemize}
 
-  \item \textbf{Fault Tolerance and Failover} : \newline
+  \item \textbf{Fault Tolerance and Failover}: \newline
   The system reduces single points of failure at both the application and storage layers. 
   At the application layer, the servers are stateless, meaning that no persistent game information is tied to a specific server instance. This means that in case of a container problem reported to the matchmaking service, the faulty container could be replaced seamlessly.
   At the storage layer, game state is persisted in Redis, which is configured with master-replica replication and monitored by Redis Sentinel. 
   If the primary Redis node fails, Sentinel can automatically promote a replica and redirect the system to the new master. 
   During infrastructure-level failures, the system prioritizes preserving a consistent game state over maintaining uninterrupted availability.
 
-  \item \textbf{Scalability} : \newline
+  \item \textbf{Scalability}: \newline
   The system supports horizontal scalability by allowing deployment of multiple matchmaking services that can, under a future expansion of load, have the total load balanced between themselves with an appropriate load balancer.
   As the number of connected players increases, additional server instances can be deployed to distribute the workload. 
   Scalability is ultimately bounded by infrastructural resources such as CPU, memory, and network capacity, as well as by the performance limits of the centralized data store.
 
-  \item \textbf{Security and Trust} : \newline
-  The architecture allows for future integration of user authentication mechanisms. 
+  \item \textbf{Security and Trust}: \newline
+  The architecture includes user authentication mechanisms. 
   Authentication ensures that a user is correctly associated with their identity and prevents impersonation. 
   Secure password storage (hashing and salting) can be incorporated if persistent user accounts are introduced. 
   Communication security (e.g., TLS) can be added to protect data in transit.
 
-  \item \textbf{Resource Sharing and Consistency} : \newline
+  \item \textbf{Resource Sharing and Consistency}: \newline
   The shared game state is centrally stored and accessed by all server instances, ensuring a single authoritative source of truth. 
   Each game action is processed atomically and results in an updated state that is broadcast to all players in the session. 
   Since the game is turn-based, events have a natural total ordering, simplifying consistency management. 
   Persisting the game state enables recovery after server failures and guarantees that all clients observe a consistent view of the system.
 
-  \item \textbf{Performance and Concurrency} : \newline
+  \item \textbf{Performance and Concurrency}: \newline
   The system can handle multiple game sessions concurrently across different server instances. 
   Within each game session, operations are inherently serialized due to the turn-based nature of the application, reducing concurrency conflicts. 
   WebSocket connections allow efficient bidirectional communication without repeated connection overhead. 
@@ -251,11 +251,11 @@ The project is designed as a distributed system and therefore takes into account
 \subsection{Architecture}\label{architecture}
 
 The distributed system follows a three-tier, layered architecture. An intuitive representation is shown in \autoref{layered-architecture}.
-This approach ensures a clear separation of concern and responsabilities.
+This approach ensures a clear separation of concerns and responsibilities.
   \begin{itemize}
-    \item Presentation tier is composed by the client user. The player have a consistent view of the current game state and can interact with a webUI to send commands to the game server. 
-    \item Logic tier is composed by the game server. It is responsible for executing commands sent from the client in a precise format.
-    \item Data tier is composed by the database. The role is to store important data such as user and game information.
+    \item The presentation tier is composed of the client user interface. The player has a consistent view of the current game state and can interact with the web UI to send commands to the game server. 
+    \item The logic tier is composed of the game server. It is responsible for executing commands sent from the client in a precise format.
+    \item The data tier is composed of the database. Its role is to store important data such as user and game information.
   \end{itemize}
   
 \begin{figure}[h!]
@@ -274,13 +274,13 @@ After each update, the new state is broadcasted to all the players.
 
 As anticipated in \autoref{architecture}, the distributed system is composed by three components:
   \begin{itemize}
-    \item Client process that is ran on the player's machine. It handles initial communication to the lobby, then continue communicating with the spawned game server process. 
+    \item Client process that runs on the player's machine. It handles initial communication with the lobby, then continues communicating with the spawned game server process. 
     \item Server process that is dynamically spawned from the lobby. It manages communication with the client by receiving commands and sending back events.
     \item Database that needs to store game information hashed per a unique identifier. Access to the database must be managed carefully as writes can still happen concurrently, on different data.
     This component is divided in:
       \begin{itemize}
         \item Master as the single source of truth.
-        \item Replica contains replicated copy of data. This ensures fault tolerance in case of crashes on the master.
+        \item Replica contains a replicated copy of the data. This ensures fault tolerance in case of crashes on the master.
       \end{itemize}
   \end{itemize}
  
@@ -290,20 +290,20 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
     \caption{Overall architecture of the distributed system}
   \end{figure}
   
-  The servers and the database are on the same network and communicate internally identified with IP adresses and ports.
-  The clients, on the other hand, can be geographically distributed since they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastucture's. 
+  The servers and the database are on the same Docker network and communicate internally using Docker service names or hostnames, which Docker resolves to container IP addresses.
+  The clients, on the other hand, can be geographically distributed since they only need to be able to reach the lobby through the Internet, so the geographic scale of the system can be much larger than the infrastructure's. 
   
 \subsection{Modelling}\label{modelling}
 
   The game server internal architecture has been designed to have a level approach, so each component has a different responsibility.
   \begin{itemize}
-    \item Domain level contains all the game logic and is responsible of applying the game rules and modifying the game state accordingly.
+    \item Domain level contains all the game logic and is responsible for applying the game rules and modifying the game state accordingly.
     \item Application level executes commands coming from the client and addresses the operation to the correct use case.
     \item Presentation level directly communicates with the client and manages communications.
   \end{itemize}
   Game actions are exposed through an RPC-like command interface. 
   For example, a client sends a command such as \texttt{game.play\_card}, and the backend dispatches it to the corresponding application method such as \texttt{playCard(username, cardIndex)}.
-  The following subsections contains UML class diagram for each level architecture. Not all class, methods and property have been represented, in order to focus more on the overall behaviour of the system.
+  The following subsections contain a UML class diagram for each architectural level. Not all classes, methods, and properties have been represented, in order to focus more on the overall behaviour of the system.
   The full code source base can be found on the repository \url{https://github.com/ajdonker/Hanabi_DS}.
 
   \subsubsection{Domain}
@@ -314,9 +314,9 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
     \label{domain-class}
   \end{figure}
 
-  The core class is Game, which mantains all the information of an ongoing game.
+  The core class is Game, which maintains all the information of an ongoing game.
   Its responsibility is to execute a player move through applying internal game rules that update its internal state.
-  Before applying the move the player has requested (playing a card, giving a hint, discarding a card), it is first checked if the player turn is correct. After applying the move, unless a gameover situation occurs, the turn is changed to another player.
+  Before applying the move the player has requested (playing a card, giving a hint, discarding a card), it is first checked whether it is the player's turn. After applying the move, unless a game-over situation occurs, the turn is changed to another player.
   \newline
   Board class is a representation of the board state: contains all the information of cards played on the table, misfires and tokens. It has been separated from Game class to better address roles and responsibilities and facilitate better testing and debugging.
   \newline
@@ -335,7 +335,7 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
   This structure promotes decoupling between the definition of the action and its execution logic, facilitating maintainability and extensibility.
   The IHandler interface defines the standard contract for all business logic handlers.
   Every handler class implements an \texttt{execute()} method that receives a command and returns a list of events generated by the operation.
-  Commands are pure data transport objects (DTOs) that encapsulate all the parameters required to execute a specific action (e.g. \texttt{PlayCardCommand}, \texttt{RegisterCommand,} \texttt{JoinLobbyCommand}).
+  Commands are pure data transport objects (DTOs) that encapsulate all the parameters required to execute a specific action (e.g. \texttt{PlayCardCommand}, \texttt{RegisterCommand}, \texttt{JoinLobbyCommand}).
   \newline
   \begin{figure}[H]
     \centering
@@ -359,12 +359,12 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
 
   Presentation layer is responsible for handling real-time communication and the translation of network messages into executable application logic. 
   The design follows the Factory and Dispatcher patterns to ensure a clean separation between the transport layer (WebSockets) and the business logic.
-  Core components are CommandMessage e Event dataclasses, which will be better explained in the next section.
+  Core components are CommandMessage and Event dataclasses, which will be better explained in the next section.
   \begin{itemize}
     \item \texttt{CommandMessage} acts as a generic Data Transfer Object (DTO) that captures incoming raw data, including the action type and its payload.
     \item \texttt{Event} represents the system's reactive output, encapsulating the state changes that need to be communicated back to the clients.
   \end{itemize}
-  WebSocketHandler is the central entry point for the real-time communication layer : it orchestrates the lifecycle of a connection (connect, message, disconnect) and it is responsible for:
+  WebSocketHandler is the central entry point for the real-time communication layer: it orchestrates the lifecycle of a connection (connect, message, disconnect) and it is responsible for:
   \begin{itemize}
     \item Serialization/Deserialization: Converting raw socket strings into structured CommandMessage objects.
     \item Orchestration: Coordinating with the Factory to create commands and the Dispatcher to execute them.
@@ -373,18 +373,18 @@ As anticipated in \autoref{architecture}, the distributed system is composed by 
 
   CommandFactory acts as a creational layer that parses the CommandMessage and instantiates the specific Command object required by the application, while CommandDispatcher maintains a registry of handlers.
   It receives the instantiated command and routes it to the correct IHandler, returning a list of resulting Events. 
-  Finally, ConnectionManager is as specialized component that manages the state of active network connections. It maintains bidirectional mappings between:
+  Finally, ConnectionManager is a specialized component that manages the state of active network connections. It maintains bidirectional mappings between players, connections, and games.
 
 \subsection{Events and commands}
 
-  At architectural level, the system distinguish between two types of messages.
+  At architectural level, the system distinguishes between two types of messages.
     \begin{itemize}
-      \item \textbf{CommandMessage}: represent a request sent from the client to the server to excecute an action.
-      \item \textbf{Event}: represent a notification generated from backend to inform the clients of an incoming changes to the state of the game.
+      \item \textbf{CommandMessage}: represents a request sent from the client to the server to execute an action.
+      \item \textbf{Event}: represents a notification generated by the backend to inform the clients of an incoming change to the state of the game.
     \end{itemize}
   In the backend, both structures are implemented using Python \texttt{dataclass}, so as to define the content of the messages in a clear and typed manner.
   \subsubsection{CommandMessage}
-  As shown in the UML class diagram in figure \autoref{presentation-class}, a command contains :
+  As shown in the UML class diagram in figure \autoref{presentation-class}, a command contains:
   \begin{itemize}
     \item the message type;
     \item the requested action;
@@ -401,12 +401,12 @@ where the first part identifies the domain or entity involved, while the second 
 This naming convention provides a clear and extensible way to categorize commands and events, simplifying both message routing and system maintenance.
   \paragraph{Examples of commands}
   \begin{itemize}
-      \item \texttt{player.login} \newline An user try to login in the system.
-      \item \texttt{player.register} \newline An user try to register in the system.
-      \item \texttt{lobby.create} \newline An user creates a new lobby.
-      \item \texttt{lobby.join} \newline A user join to an existing lobby.
+      \item \texttt{player.login} \newline A user tries to log in to the system.
+      \item \texttt{player.register} \newline A user tries to register in the system.
+      \item \texttt{lobby.create} \newline A user creates a new lobby.
+      \item \texttt{lobby.join} \newline A user joins an existing lobby.
       \item \texttt{game.play\_card} \newline A player plays a card from his hand.
-      \item \texttt{game.discard\_card} \newline A player discard a card from his hand.
+      \item \texttt{game.discard\_card} \newline A player discards a card from his hand.
       \item \texttt{game.give\_hint} \newline A player gives a hint to another player.
   \end{itemize}
   
@@ -424,23 +424,23 @@ This naming convention provides a clear and extensible way to categorize command
       \item \texttt{player\_reconnected} \newline A crashed user was able to reconnect to an ongoing match
       \item \texttt{registration\_success} \newline A user was able to register to the system
       \item \texttt{lobby\_created} \newline A new lobby is created
-      \item \texttt{match\_found} \newline A lobby reached the maximum number of user so the game started
+      \item \texttt{match\_found} \newline A lobby reached the maximum number of users, so the game started
       \item \texttt{turn\_change} \newline The turn is changed
       \item \texttt{card\_correct} \newline The player played a correct card
       \item \texttt{card\_wrong} \newline The player played a wrong card
-      \item \texttt{card\_discarded} \newline The player discarded one of his hand's card.
-      \item \texttt{card\_drawn} \newline The player drawed a new card from the pile stack
+      \item \texttt{card\_discarded} \newline The player discarded one card from his hand.
+      \item \texttt{card\_drawn} \newline The player drew a new card from the deck
       \item \texttt{hint\_given} \newline The player gave a hint to another player
-      \item \texttt{hint\_failed} \newline The plyaer failed to give a hint to another player (eg. wrong turn)
+      \item \texttt{hint\_failed} \newline The player failed to give a hint to another player (e.g. wrong turn)
       \item \texttt{misfire} \newline After a player mistake, one misfire is raised
-      \item \texttt{game\_over} \newline A gameover situation occurred
-      \item \texttt{error} \newline A generic error occurred (eg. unknown command)
+      \item \texttt{game\_over} \newline A game-over situation occurred
+      \item \texttt{error} \newline A generic error occurred (e.g. unknown command)
   \end{itemize}
 
 \subsection{Interaction}\label{interaction}
 
 The client and the server interact with a request-response interaction protocol.
-The client always has the initiative in the comunication and sends well-formatted commands to the server.
+The client always has the initiative in the communication and sends well-formatted commands to the server.
 The server is responsible for validating the command, applying the game rules and updating the current game state. After that, one or multiple events are sent back to the client.
 The only case in which the server sends events to the client unprompted is when the current player's turn is expired. In this case the game forces a change of turn to the next player.
 For each command a sequence diagram representation is shown. In the case of a game command, all the three moves are in the same diagram for simplicity.
@@ -491,7 +491,7 @@ In case it exists, the game is loaded and the player is automatically reconnecte
   %\item which components are in charge of updating the \textbf{state} of the system? \emph{when}? \emph{how}?
 %\end{itemize}
 
-The game server is meant to be a stateless component. The information about each game are stored at the Data tier.
+The game server is meant to be a stateless component. The information about each game is stored at the data tier.
 That choice is due to the fact that if Game server crashes through a valid game, information isn't lost in case of reconnection.
 Once the game is created, the game server is in charge of waiting for commands from the client side and validating the move. 
 If a move if valid, it is applied and the game state changes accordingly. After the game state update, it is always checked if a gameover situation occurred to possibly end the match.
@@ -709,7 +709,7 @@ Additional checks are still performed by the application and domain logic: the b
 
 \subsection{Technological details}\label{technological-details}
 
-The backend is implemented in Python using FastAPI. 
+The backend is implemented in Python using FastAPI\@.
 FastAPI is used to expose both HTTP endpoints and WebSocket endpoints, while Uvicorn is used as the server. 
 The backend follows a layered structure: the presentation layer handles WebSocket messages and command creation, the application layer dispatches commands to handlers, and the domain layer applies the actual Hanabi game rules.
 
@@ -840,7 +840,7 @@ docker compose up --build
 \end{verbatim}
 
 Note that the following command has to be launched in the \emph{/web/backend} subdirectory.
-Otherwisethe command can be run with the explicit file path, for example:
+Otherwise, the command can be run with the explicit file path, for example:
 
 \begin{verbatim}
 docker compose -f web/backend/docker-compose.yml up --build
@@ -850,7 +850,7 @@ This command builds the required images and starts the containers defined in the
 
 \subsubsection{Frontend}
 
-Inside the \texttt{/web/frontend} subdirectory, these command needs to be launched :
+Inside the \texttt{/web/frontend} subdirectory, these commands need to be launched:
 \begin{verbatim}
 npm install
 npm run dev
@@ -876,7 +876,7 @@ The deployment was engineered using containerization so that the system can be s
 
 The backend connects to Redis through Sentinel, instead of depending only on a fixed Redis master. This allows the backend to discover the current Redis master after a failover. The game server manager can then dynamically create separate game containers when the matchmaking service starts a new game.
 
-\subsection{Screenshosts}
+\subsection{Screenshots}
 Below are some screenshots of the system.
 \begin{figure}[H]
     \centering
