@@ -388,6 +388,7 @@ The game server uses a layered internal architecture, where each layer has a dif
     \item the message type;
     \item the requested action;
     \item a payload containing the data required for the operation;
+    \item token for authentication and authorization purposes;
     \item any additional information such as the request or connection identifier.
   \end{itemize}
   Commands are used to represent actions requested by players, such as entering the lobby, starting a game or executing a move.
@@ -419,21 +420,21 @@ This naming convention provides a clear and extensible way to categorize command
   Events are sent from the backend to clients to synchronise the game state and update the user interface in real time.
   \paragraph{Examples of events}
   \begin{itemize}
-      \item \texttt{login\_success} \newline A user was able to login to the system
-      \item \texttt{player\_reconnected} \newline A crashed user was able to reconnect to an ongoing match
-      \item \texttt{registration\_success} \newline A user was able to register to the system
-      \item \texttt{lobby\_created} \newline A new lobby is created
-      \item \texttt{match\_found} \newline A lobby reached the maximum number of users, so the game started
-      \item \texttt{turn\_change} \newline The turn is changed
-      \item \texttt{card\_correct} \newline The player played a correct card
-      \item \texttt{card\_wrong} \newline The player played a wrong card
-      \item \texttt{card\_discarded} \newline The player discarded one card from his hand.
-      \item \texttt{card\_drawn} \newline The player drew a new card from the deck
-      \item \texttt{hint\_given} \newline The player gave a hint to another player
-      \item \texttt{hint\_failed} \newline The player failed to give a hint to another player (e.g. wrong turn)
-      \item \texttt{misfire} \newline After a player mistake, one misfire is raised
-      \item \texttt{game\_over} \newline A game-over situation occurred
-      \item \texttt{error} \newline A generic error occurred (e.g. unknown command)
+      \item \texttt{login\_success} \newline A user logs in successfully.
+      \item \texttt{player\_reconnected} \newline A disconnected user reconnects to an ongoing match.
+      \item \texttt{registration\_success} \newline A user registers successfully.
+      \item \texttt{lobby\_created} \newline A new lobby is created.
+      \item \texttt{match\_found} \newline A lobby reaches the maximum number of users, so the game starts.
+      \item \texttt{turn\_change} \newline The turn changes.
+      \item \texttt{card\_correct} \newline The player plays a correct card.
+      \item \texttt{card\_wrong} \newline The player plays a wrong card.
+      \item \texttt{card\_discarded} \newline The player discards one card from his hand.
+      \item \texttt{card\_drawn} \newline The player draws a new card from the deck.
+      \item \texttt{hint\_given} \newline The player gives a hint to another player.
+      \item \texttt{hint\_failed} \newline The player fails to give a hint to another player (e.g., wrong turn).
+      \item \texttt{misfire} \newline A player mistake raises one misfire.
+      \item \texttt{game\_over} \newline The game ends.
+      \item \texttt{error} \newline A generic error occurs (e.g., unknown command).
   \end{itemize}
 
 \subsection{Interaction}\label{interaction}
