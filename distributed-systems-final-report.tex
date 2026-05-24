@@ -47,7 +47,7 @@ Each turn, one user does one of the allowed actions, then the updated game state
 Each player can:
     \begin{itemize}
         \item \emph{Give a hint} to another player and spend one of 8 hint tokens in total. The hint can give information about either the color or the number of a subset of the other player's cards. 
-        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card belongs to the wrong color, or is less than or equal to the topmost card of that color deck, the move is considered unsuccessful and one of 3 life tokens is spent. Then the player draws a card to replace the played one. 
+        \item \emph{Play a card} and attempt to place it in order in one of the colored decks. If the card cannot be legally placed on the corresponding deck, the move is unsuccessful and the number of misfires increases by one. Then the player draws a card to replace the played one.
         \item \emph{Discard} one card from their hand and return one of the already spent tokens to the pool. The player must end each turn with the same number of cards, so a new card is drawn. 
     \end{itemize}
 
