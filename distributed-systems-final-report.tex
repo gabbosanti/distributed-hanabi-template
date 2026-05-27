@@ -325,7 +325,7 @@ The game server uses a layered internal architecture, where each layer has a dif
   \subsubsection{Application}
   \begin{figure}[H]
     \centering
-    \includegraphics[width=0.8\linewidth, keepaspectratio]{figures/application.png}
+    \includegraphics[width=\linewidth, keepaspectratio]{figures/application.png}
     \label{application-class-diagram}
     \caption{UML application class}
   \end{figure}
@@ -466,7 +466,7 @@ For each command a sequence diagram representation is shown. In the case of a ga
     \caption{User login sequence diagram}
     \label{login-sequence-diagram}
 \end{figure}
-In the diagram above it's interesting to notice the reconnection mechanism: once a user successfully login, the system check wheter a game is mapped to the username.
+In the diagram above it's interesting to notice the reconnection mechanism: once a user successfully logs in, the system check wheter a game is mapped to the username.
 In case it exists, the game is loaded and the player is automatically reconnected to the ongoing match. Otherwise, it's simply redirected to the lobby view.
 \begin{figure}[H]
     \centering
@@ -602,7 +602,6 @@ The system is designed to remain operational when individual components fail, al
     Since the application servers are stateless and the persistent state is stored in Redis, requests do not depend on a specific backend instance. 
     This makes the architecture compatible with load balancing in front of the application layer, for example through a reverse proxy such as NGINX. 
     In that case, incoming client connections can be distributed across available backend instances, while Redis remains the shared storage layer.
-    The system can even be extended with load balancing incoming player connections on multiple matchmaking services running in parallel. 
   %\item In case of \textbf{network partitioning}, how does the system behave?
   \subsubsection{Network Partition}
     In case of a network partition, the system prioritizes consistency over availability. 
