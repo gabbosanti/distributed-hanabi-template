@@ -910,7 +910,9 @@ Below are some screenshots of the system.
 
 \section{User Guide}\label{user-guide}
 
-To use the system, the user first starts the backend infrastructure using Docker Compose:
+The deployed application can be accessed at \url{http://hanabi.casa/register}, which has different images compared to the local version to avoid copyright issues.
+
+To use the system locally, the user first starts the backend infrastructure using Docker Compose:
 
 \begin{verbatim}
 docker compose up --build
@@ -926,9 +928,9 @@ The expected usage flow is:
 
 \begin{itemize}
     \item open one browser tab for each client (make sure to be in incognito mode);
-    \item type \texttt{http://localhost:3000/register} to go to registration page;
-    \item once registration is succesful, the client is redirected to login page, which is reachable at the address \texttt{http://localhost:3000/login}
-    \item if login is correct, the user is redirected to the lobby page, where it can create a lobby or join an existing one;
+    \item type \url{http://localhost:3000/register} to go to registration page;
+    \item once registration is succesful, the client is redirected to login page, which is reachable at the address \url{http://localhost:3000/login}
+    \item if login is correct, the user is redirected to the lobby page \url{http://localhost:3000/lobby}, where they can create a lobby or join an existing one;
     \item join the lobby with another client;
     \item wait for the matchmaking service to create a game server;
     \item connect to the game server;
@@ -967,6 +969,8 @@ The fault-tolerance mechanism could also be improved further. Redis Sentinel is 
 A further improvement would be adding better monitoring and logging. The system could expose metrics about active games, connected players, WebSocket connections, failed messages, Redis failovers, and container health. This would make debugging easier and would also provide a clearer understanding of how the system behaves under load.
 
 Some features were not fully implemented due to time limitations. One such feature is a complete automated game-server lifecycle manager. In the current version, game containers can be created and cleaned up, but this could be extended with more advanced health checks, automatic restart policies, and graceful shutdown logic. This would ensure that inactive or failed game servers are removed safely, while active games are either preserved or migrated.
+
+Now the server container and the game container contain the same codebase, but they execute different roles. In future work, it makes sense to split the server and game logic into separate images. This would allow for more specialized containers, for example with different resource limits or scaling policies. It would also make it possible to deploy them independently.
 
 Finally, the testing strategy could be extended. The current implementation includes unit tests and some end-to-end testing, but future work could include stress testing with many concurrent players, automated failover tests, and integration tests for WebSocket reconnection. These tests would provide stronger evidence that the system remains correct and available under realistic conditions.
 
