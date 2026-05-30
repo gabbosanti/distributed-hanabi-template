@@ -55,7 +55,7 @@ Each player can:
 \subsection{Use Case description}
 The aim of this project is to design and implement a distributed version of the game Hanabi.
 It consists of a web-based application where players can connect to a server and play together directly from their browsers. 
-The system needs to store basic player information such as full name, unique ID, username and password, in order to conduct orderly match creation and orchestration.
+The system needs to store basic player information such as full name, username and password, in order to conduct orderly match creation and orchestration.
 Once the client is connected to the server, authentication is required and if a player is not registered yet, the system should allow the user to sign up.
 Then a player can choose whether to create a lobby to play with other players or join existing ones.
 The server is responsible for creating a new game and assigning a unique game ID, enabling persistent storage of its state and potential recovery in case of system restart.
@@ -84,7 +84,7 @@ From a systems perspective, distribution is required for several reasons:
     The game state represents a shared resource accessed by multiple participants. Although gameplay is turn-based, the system must guarantee consistency of the replicated state and ensure that all clients observe the same authoritative version of the game.
 
     \item \textbf{Fault tolerance:} 
-    To avoid interrupting active game sessions, the server component can be replicated. Through a consensus mechanism, a leader (master) node is elected to manage state transitions. In case of failure, another replica can be promoted, allowing the system to continue operating without losing persistent state.
+    To avoid interrupting active game sessions, the server component can be replicated. Redis Sentinel monitors the Redis master and replica. If the master becomes unavailable, Sentinel can promote the replica to become the new master, allowing the backend to continue using Redis after failover.
 
     \item \textbf{Coordination and consistency:} 
     Even though only one player performs an action per turn, the distributed environment introduces challenges such as message ordering, duplicated requests, and possible race conditions during failures. The system must therefore enforce a well-defined consistency model.
@@ -127,7 +127,7 @@ The focus is not only game functionality, but also distributed coordination, con
   \item \textbf{FR5: Player Disconnection Handling} \newline
   The system shall handle player disconnections gracefully, allowing the game to continue if possible.
   \begin{itemize}
-    \item \textbf{Acceptance Criterion:} If a player disconnects, the system allows the remaining players to continue the game, and the disconnected player can reconnect within a reasonable time frame without losing their progress.
+    \item \textbf{Acceptance Criterion:} If a player disconnects, the system allows the remaining players to continue the game, and the disconnected player can reconnect without losing their progress.
   \end{itemize}
 
   \item \textbf{FR6: Security} \newline
@@ -221,15 +221,12 @@ The project is designed as a distributed system and therefore takes into account
   During infrastructure-level failures, the system prioritizes preserving a consistent game state over maintaining uninterrupted availability.
 
   \item \textbf{Scalability}: \newline
-  The system supports horizontal scalability by allowing deployment of multiple matchmaking services that can, under a future expansion of load, have the total load balanced between themselves with an appropriate load balancer.
-  As the number of connected players increases, additional server instances can be deployed to distribute the workload. 
-  Scalability is ultimately bounded by infrastructural resources such as CPU, memory, and network capacity, as well as by the performance limits of the centralized data store.
+  The system supports a limited form of horizontal scalability at the game-server level. When a lobby becomes full, the main backend creates a dedicated \texttt{hanabi-game-xxx} container for that game. Therefore, multiple games can run in separate containers instead of sharing a single game process. This design helps isolate game sessions and allows the workload of active games to be distributed across several container instances. However, the matchmaking service and Redis remain centralized components, so the scalability of the current implementation is still bounded by the resources of the main backend, Redis, and the host machine.
 
   \item \textbf{Security and Trust}: \newline
   The architecture includes user authentication mechanisms. 
   Authentication ensures that a user is correctly associated with their identity and prevents impersonation. 
   Secure password storage (hashing and salting) can be incorporated if persistent user accounts are introduced. 
-  Communication security (e.g., TLS) can be added to protect data in transit.
 
   \item \textbf{Resource Sharing and Consistency}: \newline
   The shared game state is centrally stored and accessed by all server instances, ensuring a single authoritative source of truth. 
@@ -687,7 +684,7 @@ Player-game mappings are used to prevent a player from joining multiple unfinish
 Redis Sentinel is used by the backend to discover the current Redis master. 
 This avoids depending permanently on a single Redis master address and supports failover if the original master becomes unavailable.
 
-\subsection{Authentication and authorization}
+\subsection{Authentication and Authorization}
 
 Users authenticate with a username and password. 
 Registration stores the user information in Redis, while login verifies the submitted credentials on the server side. 
@@ -910,7 +907,9 @@ Below are some screenshots of the system.
 
 \section{User Guide}\label{user-guide}
 
-To use the system, the user first starts the backend infrastructure using Docker Compose:
+The deployed application can be accessed at \url{http://hanabi.casa/register}, which has different images compared to the local version to avoid copyright issues.
+
+To use the system locally, the user first starts the backend infrastructure using Docker Compose:
 
 \begin{verbatim}
 docker compose up --build
@@ -926,9 +925,9 @@ The expected usage flow is:
 
 \begin{itemize}
     \item open one browser tab for each client (make sure to be in incognito mode);
-    \item type \texttt{http://localhost:3000/register} to go to registration page;
-    \item once registration is succesful, the client is redirected to login page, which is reachable at the address \texttt{http://localhost:3000/login}
-    \item if login is correct, the user is redirected to the lobby page, where it can create a lobby or join an existing one;
+    \item type \url{http://localhost:3000/register} to go to registration page;
+    \item once registration is succesful, the client is redirected to login page, which is reachable at the address \url{http://localhost:3000/login}
+    \item if login is correct, the user is redirected to the lobby page \url{http://localhost:3000/lobby}, where they can create a lobby or join an existing one;
     \item join the lobby with another client;
     \item wait for the matchmaking service to create a game server;
     \item connect to the game server;
@@ -960,13 +959,13 @@ Although the final implementation provides the core functionality of the distrib
 
 One important future improvement would be the introduction of a load balancer, such as Nginx, in front of the backend services. In the current implementation, clients connect directly to the matchmaker or to the game server assigned to them. A load balancer would make this process more transparent and would allow incoming connections to be distributed across multiple backend instances. This would also make the system easier to scale horizontally, because new backend instances could be added without requiring changes on the client side, and could effectively decouple individual game servers from particular game instances.
 
-Another possible extension is improving the reconnection mechanism. At the moment, the client can reconnect and receive the latest game state from the server. However, this could be extended with stronger session management, so that users can safely disconnect and reconnect even after longer network failures. This could be implemented using persistent session tokens stored in Redis, allowing the system to identify returning users and restore their active game connection more reliably.
-
 The fault-tolerance mechanism could also be improved further. Redis Sentinel is used to detect master failures and promote a replica to master, which provides automatic failover for the persistent state layer. In future work, this could be combined with more extensive failure testing, such as deliberately stopping containers, simulating network partitions, or testing delayed messages between services. This would make it possible to evaluate the behavior of the system under more realistic distributed-system failures.
 
 A further improvement would be adding better monitoring and logging. The system could expose metrics about active games, connected players, WebSocket connections, failed messages, Redis failovers, and container health. This would make debugging easier and would also provide a clearer understanding of how the system behaves under load.
 
 Some features were not fully implemented due to time limitations. One such feature is a complete automated game-server lifecycle manager. In the current version, game containers can be created and cleaned up, but this could be extended with more advanced health checks, automatic restart policies, and graceful shutdown logic. This would ensure that inactive or failed game servers are removed safely, while active games are either preserved or migrated.
+
+Now the server container and the game container contain the same codebase, but they execute different roles. In future work, it makes sense to split the server and game logic into separate images. This would allow for more specialized containers, for example with different resource limits or scaling policies. It would also make it possible to deploy them independently.
 
 Finally, the testing strategy could be extended. The current implementation includes unit tests and some end-to-end testing, but future work could include stress testing with many concurrent players, automated failover tests, and integration tests for WebSocket reconnection. These tests would provide stronger evidence that the system remains correct and available under realistic conditions.
 
