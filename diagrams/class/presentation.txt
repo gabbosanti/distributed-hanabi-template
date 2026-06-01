@@ -27,6 +27,7 @@ class WebSocketHandler {
 - connectionManager : ConnectionManager
 - dispatcher : CommandDispatcher
 - command_factory : CommandFactory
+- auth_service : AuthenticationService
 
 + deserialize(raw_text :str) : CommandMessage
 + serialize (message : CommandMessage) : str
@@ -37,6 +38,9 @@ class WebSocketHandler {
 + on_message(conn_id : str, raw_text : str) : void
 + _handle_command(message : CommandMessage) : list[Event]
 + broadcast(conn_id: str, events: list[Event]) : void
+
++ _authenticate_and_authorize(message: CommandMessage) : void
++ _expected_user_for_action(message: CommandMessage) : Optional[str]
 
 + main(websocket) : void
 

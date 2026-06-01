@@ -35,7 +35,8 @@ class RegisterHandler{
 
 class LoginHandler{
  - IUserRepository : repo
-  + excecute(LoginCommand : command) : list[Event]
+ - AuthenticationService : auth_service
+ + excecute(LoginCommand : command) : list[Event]
 }
 
 PlayCardHandler -up-> IHandler
@@ -91,14 +92,22 @@ class JoinLobbyCommand{
     - user_joined : str
 }
 
+class AuthenticationService{
+    - secret : str
+    - duration_seconds : int
+    + generate_token(str: username) : str
+    + validate_token(str: token) : str | None
+    + _signature(str: username, int : expires_at) : str
+}
+
 PlayCardCommand -up-> PlayCardHandler
 DiscardCardCommand -up-> DiscardCardHandler
 GiveHintCommand -up-> GiveHintHandler
 
 RegisterCommand -left-> RegisterHandler
 LoginCommand -down-> LoginHandler
+AuthenticationService -left-> LoginHandler
 
 CreateLobbyCommand -down-> CreateLobbyHandler
 JoinLobbyCommand -right-> JoinLobbyHandler
-
 @enduml
