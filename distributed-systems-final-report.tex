@@ -32,10 +32,22 @@
 Hanabi is a cooperative multiplayer card game for 2--4 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
 
-\begin{figure}[h!]
+\vspace{-3em}
+\begin{center}
     \centering
     \includegraphics[width=0.5\linewidth]{figures/hanabi.jpg}
-\end{figure}
+\end{center}
+\vspace{-1.2em}
+
+\noindent\textbf{AI Disclaimer}
+
+\noindent AI tools were used during the development of this project to support coding, debugging, architectural reasoning, and language polishing for the report. The final implementation, design choices, tests, and written content were reviewed, adapted, and validated by the authors.
+
+\newpage
+
+\tableofcontents
+
+\newpage
 
 \section{Concept}\label{concept}
 
@@ -618,24 +630,24 @@ The system is designed to remain operational when individual components fail, al
 \begin{itemize}
   %\item Is there any form of \textbf{authentication}?
     \item Authentication: \newline
-    Users authenticate using a username and password. 
-    The validation is performed on the server side, so the client is not trusted to decide whether a login attempt is valid. 
-    Instead of storing plaintext passwords, the system stores a hashed version of the password in Redis. 
-    In the current implementation, SHA-256 is used as the hashing function. 
-    This improves security compared to plaintext storage, since the original password is not directly stored in the database.
-    After a successful login, the server returns an authentication token to the client. 
-    The frontend sends this token in later WebSocket commands, so the backend can identify the user without querying the user database for every command. 
-    The token contains the username, an expiration time, and a server-generated signature. 
-    If the token is expired or the signature does not match, the request is rejected.
+    Users authenticate with a username and password. 
+    Registration stores the user information in Redis, while login verifies the submitted credentials on the server side. 
+    Passwords are stored as SHA-256 hashes rather than as plaintext. 
+    When login succeeds, the backend generates a token and returns it in the login event. 
+    The token is a Base64-encoded JSON object containing the username, an expiration timestamp, and a SHA-256 signature generated with a secret configured through an environment variable. 
+    The frontend stores this token and sends it with every WebSocket command.
+
+    On the backend, login and registration are public commands. 
+    All other WebSocket commands pass through the authentication check in the WebSocket handler. 
+    The handler decodes the token, verifies that it is not expired, recomputes the signature, and rejects the command if the token is missing or invalid. 
+    This allows the server to authenticate normal game requests without loading the user from Redis each time.
   %\item Is there any form of \textbf{authorization}?
   %\begin{itemize}
     \item Authorization: \newline
-    The system does not implement a complex role-based authorization mechanism. 
-    All authenticated users have the same general role: player. 
-    Access control is therefore enforced by checking whether the authenticated user is allowed to perform the requested action. 
-    For example, the username extracted from the token must match the player field of commands such as playing a card, discarding a card, giving a hint, joining a lobby, or creating a lobby. 
-    The game logic then performs the remaining authorization checks, such as verifying that the player belongs to the game and that it is actually their turn. 
-    This prevents clients from directly modifying the game state or executing invalid actions without server-side checks.
+    The system does not implement role-based authorization, since all users have the same role of player. 
+    Instead, authorization is enforced by comparing the authenticated username with the player name contained in the command. 
+    For example, a user can only send a play or discard command for their own player name, and a hint command must come from the authenticated user. 
+    Additional checks are still performed by the application and domain logic: the backend verifies whether a player is already in an unfinished game, whether a lobby exists, whether the player belongs to the game, and whether it is actually that player's turn before applying an action.
   %\end{itemize}
 
 \end{itemize}
@@ -683,25 +695,6 @@ Player-game mappings are used to prevent a player from joining multiple unfinish
 
 Redis Sentinel is used by the backend to discover the current Redis master. 
 This avoids depending permanently on a single Redis master address and supports failover if the original master becomes unavailable.
-
-\subsection{Authentication and Authorization}
-
-Users authenticate with a username and password. 
-Registration stores the user information in Redis, while login verifies the submitted credentials on the server side. 
-Passwords are stored as SHA-256 hashes rather than as plaintext. 
-When login succeeds, the backend generates a token and returns it in the login event. 
-The token is a Base64-encoded JSON object containing the username, an expiration timestamp, and a SHA-256 signature generated with a secret configured through an environment variable. 
-The frontend stores this token and sends it with every WebSocket command.
-
-On the backend, login and registration are public commands. 
-All other WebSocket commands pass through the authentication check in the WebSocket handler. 
-The handler decodes the token, verifies that it is not expired, recomputes the signature, and rejects the command if the token is missing or invalid. 
-This allows the server to authenticate normal game requests without loading the user from Redis each time.
-
-The system does not implement role-based authorization, since all users have the same role of player. 
-Instead, authorization is enforced by comparing the authenticated username with the player name contained in the command. 
-For example, a user can only send a play or discard command for their own player name, and a hint command must come from the authenticated user. 
-Additional checks are still performed by the application and domain logic: the backend verifies whether a player is already in an unfinished game, whether a lobby exists, whether the player belongs to the game, and whether it is actually that player's turn before applying an action.
 
 \subsection{Technological details}\label{technological-details}
 
