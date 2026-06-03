@@ -32,10 +32,10 @@
 Hanabi is a cooperative multiplayer card game for 2--4 players where players score by guessing their own hidden cards based on hints given by other players. This project aims to implement a working version of the game that manages the shared state consistently and reliably, while being able to tolerate disconnects from a client or the server. 
 \end{abstract}
 
-\vspace{-3em}
+\vspace{-1.2em}
 \begin{center}
     \centering
-    \includegraphics[width=0.5\linewidth]{figures/hanabi.jpg}
+    \includegraphics[width=0.4\linewidth]{figures/hanabi.jpg}
 \end{center}
 \vspace{-1.2em}
 
@@ -937,7 +937,7 @@ I provided an implementation of parts in domain layer (game logic) and applicati
 I also focused on writing several parts of the report, especially section \autoref{design}, including all the images and diagrams.
 
 \subsection{Blagoja Savevski}
-My role focused on implementing the command-handler flow responsible for connecting the different layers of the system. I also designed and ran unit tests for most of the core objects, with a particular focus on the domain layer, to ensure that the implementation conformed to the project specification.
+My role focused on implementing the backend, for example the command-handler flow responsible for connecting the different layers of the system. I also designed and ran unit tests for most of the core objects, with a particular focus on the domain layer, to ensure that the implementation conformed to the project specification.
 
 Furthermore, I was responsible for prototyping earlier versions of the system that relied on communication protocols different from those used in the final version. I also worked extensively on the Docker orchestration of multiple containers, which enables service failover and contributes to the overall fault tolerance of the system.
 
