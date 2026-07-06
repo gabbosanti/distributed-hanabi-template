@@ -39,6 +39,6 @@ RedisRepository -up-> IGameRepository
 
 MatchmakingService -left-> RedisRepository
 
-GameServerManager -down-> MatchmakingService
+MatchmakingService -up-> GameServerManager
 
 @enduml
