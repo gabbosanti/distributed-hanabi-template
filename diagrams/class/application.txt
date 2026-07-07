@@ -1,6 +1,6 @@
 @startuml
 interface IHandler{
-    + excecute(command) : void
+    + excecute(command) : list[Event]
 }
 
 class PlayCardHandler{
